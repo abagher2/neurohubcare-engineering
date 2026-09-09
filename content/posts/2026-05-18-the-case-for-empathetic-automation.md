@@ -11,7 +11,7 @@ While our engineering blog focuses heavily on Directed Acyclic Graphs, Playwrigh
 NeuroHub is not just a technical exercise in multi-agent orchestration. We are building the operating system for neurodiversity care, driven by a core product philosophy: **Empathetic Automation**.
 
 ### The Human Cost of Bureaucracy
-
+<!-- @comment: This is too negative. It's complex but well-intentioned. We should focus on the positive approach to helping families -->
 Under programs like California's Lanterman Act, families navigating the Regional Center system face a crushing administrative burden. To secure state funding for their neurodivergent children, parents are forced to become full-time project managers, accountants, and legal advocates. They must parse 40-page Individual Program Plans (IPPs), manually reconcile expenditures with Financial Management Services (FMS), and fight for out-of-pocket Service Request Authorization (SRA) clawbacks.
 
 The bureaucracy is complex, unforgiving, and emotionally exhausting. The system demands pristine compliance from families who are already stretched to their absolute limits providing care.

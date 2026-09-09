@@ -4,7 +4,7 @@ date: "2026-05-08"
 slug: "gpu-compositing-optimization-glassmorphic-uis"
 summary: "The trend of \"Glassmorphism\"—using semi-transparent, blurred backgrounds to create depth—has taken SaaS UIs by storm. In our servi..."
 ---
-The trend of "Glassmorphism"—using semi-transparent, blurred backgrounds to create depth—has taken SaaS UIs by storm. In our service marketplace inventory dashboard, we adopted this aesthetic for our modal overlays and sticky headers. However, we quickly hit a wall: performance. 
+The trend of "Glassmorphism"—using semi-transparent, blurred backgrounds to create depth—has taken SaaS UIs by storm. In our reimbursement inventory dashboard, we adopted this aesthetic for our modal overlays and sticky headers. However, we quickly hit a wall: performance. 
 
 Applying `backdrop-filter: blur(10px)` across multiple overlapping layers causes severe frame drops, especially on lower-end devices. The browser must constantly recalculate the pixel values of the elements behind the frosted glass, leading to excessive repaints and a janky scrolling experience.
 
@@ -47,6 +47,6 @@ export const GlassPanel: React.FC<GlassPanelProps> = ({ children, isActive }) =>
 };
 ```
 
-Furthermore, we utilized Playwright fixtures to run automated performance tests. We created a script that measures the Frames Per Second (FPS) while scrolling the service marketplace dashboard with various glassmorphic modals open. This ensures regressions aren't introduced. 
+Furthermore, we utilized Playwright fixtures to run automated performance tests. We created a script that measures the Frames Per Second (FPS) while scrolling the reimbursement inventory dashboard with various glassmorphic modals open. This ensures regressions aren't introduced. 
 
-The key takeaway is that `backdrop-filter` is not free. By managing the lifecycle of compositing layers—applying `will-change` and `translateZ(0)` only when absolutely necessary—we achieved a buttery-smooth 60fps experience without sacrificing the premium Glassmorphic aesthetic. The AI learned that GPU memory is a finite resource and that layer promotion is a tactical tool, not a blanket solution.\n
+The key takeaway is that `backdrop-filter` is not free. By managing the lifecycle of compositing layers—applying `will-change` and `translateZ(0)` only when absolutely necessary—we achieved a buttery-smooth 60fps experience without sacrificing the premium Glassmorphic aesthetic. The key lesson is that GPU memory is a finite resource and that layer promotion is a tactical tool, not a blanket solution.\n
