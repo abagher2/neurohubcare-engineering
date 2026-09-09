@@ -1,0 +1,86 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 0;
+  margin-bottom: 4rem;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  line-height: 1.25;
+  vertical-align: middle;
+  transition: var(--transition);
+}
+
+.navLink:hover {
+  color: var(--text-main);
+}
+
+.ctaButton {
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  background: var(--primary);
+  box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.39);
+  color: #fff !important;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.ctaButton:hover {
+  background: var(--primary-dark);
+  box-shadow: 0 6px 20px 0 rgba(99, 102, 241, 0.39);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+  }
+
+  .nav {
+    position: absolute;
+    z-index: 1000;
+    top: 100%;
+    right: 0;
+    left: 0;
+    display: none;
+    flex-direction: column;
+    padding: 1rem;
+    background: var(--surface);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  }
+
+  .nav.open {
+    display: flex;
+  }
+
+  .ctaButton {
+    padding: 0.85rem 1.25rem;
+    font-size: 0.9rem;
+  }
+}

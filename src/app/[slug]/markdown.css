@@ -1,0 +1,73 @@
+.markdown-body {
+  font-family: var(--font-inter, sans-serif);
+  line-height: 1.7;
+  color: var(--slate-700);
+  font-size: 1.125rem;
+}
+
+.markdown-body h2 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--slate-900);
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.markdown-body h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--slate-900);
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.markdown-body p {
+  margin-bottom: 1.5rem;
+}
+
+.markdown-body a {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.markdown-body ul, .markdown-body ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.markdown-body li {
+  margin-bottom: 0.5rem;
+}
+
+.markdown-body pre {
+  background: var(--slate-900);
+  color: var(--slate-50);
+  padding: 1.25rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.markdown-body code {
+  font-family: monospace;
+  background: var(--slate-100);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.9em;
+  color: var(--slate-800);
+}
+
+.markdown-body pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+.markdown-body blockquote {
+  border-left: 4px solid var(--slate-300);
+  padding-left: 1rem;
+  color: var(--slate-600);
+  font-style: italic;
+  margin-bottom: 1.5rem;
+}

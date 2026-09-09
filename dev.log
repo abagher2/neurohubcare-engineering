@@ -1,0 +1,20 @@
+
+> engineering-blog@0.1.0 dev
+> next dev -p 3002
+
+⚠ You are running Next.js on an Apple Silicon Mac with Rosetta 2 translation, which may cause degraded performance. You may have accidentally installed an x86-64 version of Node.js.
+▲ Next.js 16.3.4 (Turbopack)
+- Local:         http://localhost:3002
+- Network:       http://192.168.4.95:3002
+✓ Ready in 17.8s
+✓ Running next.config.ts took 1802ms
+⨯ Another next dev server is already running.
+
+- Local:        http://localhost:3001
+- PID:          74707
+- Dir:          /Users/abagher/Documents/GitHub/neurohubcare-engineering
+- Log:          .next/dev/logs/next-development.log
+
+You can access the existing server at http://localhost:3001,
+or run kill 74707 to stop it and start a new one.
+[?25h
