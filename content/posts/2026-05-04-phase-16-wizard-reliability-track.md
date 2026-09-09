@@ -2,9 +2,9 @@
 title: "Phase 16 Wizard Reliability Track"
 date: "2026-05-04"
 slug: "phase-16-wizard-reliability-track"
-summary: "When building complex multi-step wizards for our hypothetical claim origination system, we ran into significant reliability issues..."
+summary: "When building complex multi-step wizards for our Service Request Authorization (SRA) pipelines, we ran into significant reliability issues..."
 ---
-When building complex multi-step wizards for our hypothetical claim origination system, we ran into significant reliability issues. Users would refresh the page halfway through a 16-step form, losing state and abandoning their applications. Our React state was tightly coupled to the component tree, leading to unmanageable side effects.
+When building complex multi-step wizards for our Service Request Authorization (SRA) pipelines, we ran into significant reliability issues. Users would refresh the page halfway through a 16-step form, losing state and abandoning their applications. Our React state was tightly coupled to the component tree, leading to unmanageable side effects.
 
 ### Decoupling State from UI with State Machines
 
@@ -56,4 +56,4 @@ export const claimWizardMachine = createMachine({
 });
 ```
 
-By treating the wizard as a formal state machine and enforcing strict Zod validations at every transition, we eliminated the "lost state" bugs. The AI agent proved invaluable in generating the boilerplate for these strongly-typed transitions, allowing us to focus on the core business logic of the claim origination process.
+By treating the wizard as a formal state machine and enforcing strict Zod validations at every transition, we eliminated the "lost state" bugs, allowing us to focus on the core business logic of the SRA origination process.

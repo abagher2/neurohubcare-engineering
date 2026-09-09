@@ -2,9 +2,9 @@
 title: "Reconstructing Messy Email Threads at Scale"
 date: "2026-05-03"
 slug: "reconstructing-messy-email-threads-at-scale"
-summary: "Parsing email threads is notoriously difficult. In our hypothetical compliance software, we needed to reconstruct fragmented email..."
+summary: "Parsing email threads is notoriously difficult. In our automated compliance pipelines, we needed to reconstruct fragmented email..."
 ---
-Parsing email threads is notoriously difficult. In our hypothetical compliance software, we needed to reconstruct fragmented email threads between recruiters and candidates into a clean, unified chronological timeline. We couldn't rely on simple regex; we needed a robust system to handle top-posting, inline replies, and varying email clients.
+Parsing email threads is notoriously difficult. In our automated compliance pipelines, we needed to reconstruct fragmented email threads between independent facilitators and regional center coordinators into a clean, unified chronological timeline. We couldn't rely on simple regex; we needed a robust system to handle top-posting, inline replies, and varying email clients.
 
 ### Directed Acyclic Graphs for Email Lineage
 
@@ -61,4 +61,4 @@ class ThreadDAG {
 }
 ```
 
-By moving away from regex and utilizing an AST-based parser coupled with DAG reconstruction, we were able to process thousands of messy compliance email threads daily. The AI agent, once corrected, wrote the normalization functions that computed the `normalizedBodyHash`, allowing us to deduplicate inline replies with ease.
+By moving away from regex and utilizing an AST-based parser coupled with DAG reconstruction, we were able to process thousands of messy compliance email threads daily. We wrote the normalization functions that computed the `normalizedBodyHash`, allowing us to deduplicate inline replies with ease.
