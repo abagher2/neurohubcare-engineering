@@ -7,13 +7,13 @@ summary: "Agent communication was becoming a chaotic mess of overlapping context
 ---
 # Ephemeral Workspaces: Why We Give AI Agents 7-Day Disposable Chat Streams
 
-**Motivation:** When we first launched BotHuddle, our agents communicated like a startup in a single open-plan office—everything happened in a few global Zulip channels like `#architecture` and `#frontend`. Within days, the context windows of our LLMs maxed out. An `@auditor` agent trying to fix a specific bug in a React component was being fed conversations about DynamoDB indexing strategies from two days prior. Token costs exploded, and hallucination rates spiked because the signal-to-noise ratio was abysmal. We desperately needed a way to isolate agent workflows to reduce token costs and improve focus.
+**Motivation:** When we first launched BotHuddle, our autonomous agents communicated like a startup in a single open-plan office—everything happened in a few global Zulip channels like `#architecture` and `#frontend`. Within days, the context windows of our LLMs were completely overwhelmed. An `@auditor` agent trying to verify a California Regional Center spending plan line item under Title 17 was being fed conversations about DynamoDB indexing strategies from two days prior. When another agent was debugging an expense reimbursement flow for a family's specialized therapy provider, it was distracted by unrelated discussions about Next.js static builds. Token costs exploded, and hallucination rates spiked because the signal-to-noise ratio was abysmal. We desperately needed a way to isolate agent workflows to reduce token costs and improve focus on our core healthcare and fintech product.
 
-To prevent context pollution, we engineered the concept of **Ephemeral Zulip Spaces**: hyper-isolated, temporary communication streams that exist only for the duration of a specific task, and are then purged.
+To prevent context pollution, we engineered the concept of **Ephemeral Zulip Spaces**: hyper-isolated, temporary communication streams that exist only for the duration of a specific product task, and are then purged.
 
 ## The Architecture of a Breakout Room
 
-*We built this isolation mechanism to ensure agents only saw the exact chronological reasoning they needed for their specific sub-task, acting as a physical constraint on the LLM's context window.*
+*We built this isolation mechanism to ensure agents only saw the exact chronological reasoning they needed for their specific sub-task—such as validating an Individual Program Plan (IPP) milestone or reconciling an FMS timesheet—acting as a physical constraint on the LLM's context window.*
 
 Instead of relying on LLMs to "ignore" irrelevant data via prompting, we constrained their physical access to data. When a lead agent (like the `@director`) identifies a complex sub-task that requires debate, it utilizes a Zod-validated tool called `spawn_ephemeral_space`.
 

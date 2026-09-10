@@ -19,9 +19,9 @@ We first needed to properly diagnose the root causes of our severe system degrad
 
 ### The Authentication Fracture
 
-In our AWS Amplify architecture, authentication is handled securely by AWS Cognito. The resulting JWT tokens must be rigorously managed and attached to every request interacting with our DynamoDB tables via AppSync GraphQL. However, the AI agents had completely fractured this authentication layer through sheer duplication and misunderstanding of boundary contexts.
+In our AWS Amplify architecture, authentication is handled securely by AWS Cognito, governing access to sensitive healthcare records: the child's Care Plan (`/care-plan`), legal IPP documents in the Vault (`/vault`), and banking/FMS reimbursement details in the Action Center (`/requests`). The resulting JWT tokens must be rigorously validated and attached to every request interacting with our DynamoDB tables via AppSync GraphQL. However, the AI agents had completely fractured this authentication layer through sheer duplication and misunderstanding of boundary contexts.
 
-Instead of relying on a centralized, secure provider at the root of the application, the agents were repeatedly instantiating custom validation hooks inside deeply nested, leaf-node components. Our old, edge-based authentication wrapper failed catastrophically as we introduced more complex data fetching requirements. The agents were trying to enforce authorization boundaries at the HTTP network edge, entirely missing the point that in our static export, the edge is the client's browser.
+Instead of relying on a centralized, secure provider at the root of the application, the agents were repeatedly instantiating custom validation hooks inside deeply nested, leaf-node components. Our old, edge-based authentication wrapper failed catastrophically as we introduced more complex data fetching requirements. The agents were trying to enforce authorization boundaries at an imaginary HTTP network edge, entirely missing the point that in our static export, client-side hydration connects directly from the browser to AppSync. Worse, they repeatedly blurred the boundary between the User (the parent or caregiver) and the Client (the neurodivergent dependent), risking cross-pollination of confidential medical records.
 
 ```typescript
 // Legacy agent-generated approach

@@ -8,9 +8,11 @@ summary: "Before BotHuddle, our autonomous agents were siloed, disjointed script
 
 # The 14-Phase Roadmap for BotHuddle
 
-Before BotHuddle, our autonomous agents were siloed, disjointed scripts that couldn't collaborate. The engineering team faced massive pain points: context was lost between tools, agents couldn't communicate with human reviewers, and manual intervention was required for every handoff. We needed a unified orchestration layer to bring order to the chaos.
+At NeuroHub, we build desktop-class software for families and individuals navigating California's developmental disabilities system—specifically the Self-Determination Program (SDP) and traditional Regional Center services (SAR). Our core product automates complex annual spending plans ($50,000 to $150,000+ state-funded budgets), tracks Individual Program Plans (IPPs), verifies California Title 17 compliance, and streamlines expense reimbursements with Financial Management Services (FMS).
 
-BotHuddle acts as the connective tissue that allows autonomous agents to listen, reason, and act across our infrastructure, bridging our Forgejo Git Ledger with our Zulip communications bus. Here is the unvarnished 14-phase roadmap of how we are building, scaling, and operationalizing BotHuddle across our engineering fleet.
+Building for this high-stakes healthcare and fintech domain requires immense engineering rigor. As our feature surface expanded across 21 California Regional Centers, our autonomous engineering agents were initially siloed, disjointed scripts that couldn't collaborate effectively. Context was lost between tools, agents couldn't communicate with human reviewers, and manual intervention was required for every handoff. We needed a unified orchestration layer to bring order to the chaos.
+
+BotHuddle was designed as the connective tissue that allows autonomous agents to listen, reason, and act across our infrastructure, bridging our Forgejo Git Ledger with our Zulip communications bus. Here is the unvarnished 14-phase roadmap of how we are building, scaling, and operationalizing BotHuddle across our engineering fleet.
 
 ## Phase 1: Inception and Theoretical Underpinnings
 

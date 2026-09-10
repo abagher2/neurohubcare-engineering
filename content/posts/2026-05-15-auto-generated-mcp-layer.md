@@ -18,11 +18,11 @@ To definitively solve this, BotHuddle adopted the Model Context Protocol (MCP) a
 
 ## HuddleSchema as the Source of Truth
 
-`HuddleSchema` was born out of necessity. It was our internal DSL (Domain Specific Language) defined in YAML, capturing every tool, resource, and prompt available within the agent matrix. Instead of maintaining disjointed documentation and separate code implementations, `HuddleSchema` became the canonical definition of what an agent could do.
+`HuddleSchema` was born out of necessity. It was our internal DSL (Domain Specific Language) defined in YAML, capturing every tool, resource, and prompt available within the agent matrix. Crucially, it codified the operational interfaces of NeuroHub's core product: verifying California Title 17 service codes, calculating Self-Determination Program (SDP) spending plan line items, validating FMS expense reimbursements, and parsing Individual Program Plan (IPP) goals.
 
-By utilizing AWS Amplify Gen 2, we mapped this schema directly to our backend infrastructure. The definitions in `HuddleSchema` dictated the AppSync GraphQL schemas and the corresponding DynamoDB table structures. This ensured that the AI's semantic understanding of its capabilities perfectly matched the physical reality of our AWS infrastructure. 
+By utilizing AWS Amplify Gen 2, we mapped this schema directly to our backend infrastructure. The definitions in `HuddleSchema` dictated the AppSync GraphQL schemas and the corresponding DynamoDB table structures. This ensured that the AI's semantic understanding of its capabilities perfectly matched the physical reality of our AWS infrastructure and California healthcare regulations.
 
-Our custom `huddle-gen` compiler was the engine driving this system. It parsed the `HuddleSchema` definitions and automatically emitted type-safe TypeScript bindings for our Next.js backend. This generation step removed human error from the equation entirely. When a developer wanted to add a new capability for an agent, they updated the YAML schema, and the CI/CD pipeline generated the rest.
+Our custom `huddle-gen` compiler was the engine driving this system. It parsed the `HuddleSchema` definitions and automatically emitted type-safe TypeScript bindings for our Next.js backend. This generation step removed human error from the equation entirely. When a developer or compliance officer added a new regional center policy check or spending category, they updated the YAML schema, and the CI/CD pipeline generated the rest.
 
 ## Enforcing Strictness with the Builder Pattern
 
