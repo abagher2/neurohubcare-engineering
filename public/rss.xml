@@ -5,7 +5,7 @@
     <link>https://blog.neurohubcare.com</link>
     <description>Chronicles of building the AI-native operating system for neurodiversity care.</description>
     <language>en-us</language>
-    <lastBuildDate>Thu, 10 Sep 2026 23:32:29 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 10 Sep 2026 23:58:26 GMT</lastBuildDate>
     <atom:link href="https://blog.neurohubcare.com/rss.xml" rel="self" type="application/rss+xml" />
     
     <item>
@@ -261,11 +261,11 @@
       <description><![CDATA[As our autonomous agents scaled, we hit a massive integration bottleneck. Our early prototypes relied on agents interacting directly with raw REST endpoints across Forgejo and Zulip. This approach rapidly devolved into a "spaghetti" architecture, leading to brittle agent logic, unpredictable state mutations, and a debugging nightmare every time an API contract shifted.]]></description>
     </item>
     <item>
-      <title><![CDATA[The 14-Phase Roadmap for BotHuddle: Orchestrating AI Agents across Forgejo and Zulip]]></title>
+      <title><![CDATA[The 14-Phase Roadmap for BotHuddle: Orchestrating Enterprise Swarms Across Git and Chat]]></title>
       <link>https://blog.neurohubcare.com/2026-05-01-the-14-phase-roadmap</link>
       <guid isPermaLink="true">https://blog.neurohubcare.com/2026-05-01-the-14-phase-roadmap</guid>
       <pubDate>Fri, 01 May 2026 00:00:00 GMT</pubDate>
-      <description><![CDATA[Before BotHuddle, our autonomous agents were siloed, disjointed scripts that couldn't collaborate. The engineering team faced massive pain points: context was lost between tools, agents couldn't communicate with human reviewers, and manual intervention was required for every handoff. We needed a unified orchestration layer to bring order to the chaos.]]></description>
+      <description><![CDATA[How we architected BotHuddle as an enterprise Hybrid Workforce OS: featuring a Git-backed Coordination Ledger, prediction-market Bot Resource Management (Silicon Units), and strict bot naming conventions so engineering teams can plan and execute with autonomous swarms.]]></description>
     </item>
     <item>
       <title><![CDATA[The Engineering Mandate: Why We Need Autonomous AI Agents]]></title>
