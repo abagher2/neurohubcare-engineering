@@ -55,23 +55,21 @@ app.post('/analyze-frame', async (req, res) => {
 
 By forcing all visual diagnostic requests through this strict concurrency limit of 1, we entirely eliminated VRAM OOM crashes while maintaining the high fidelity of full-page, uncropped screenshots. The Queue acts as a traffic cop for our local LLM infrastructure. When multiple tests fail concurrently across parallel Playwright shards, the requests safely queue up. It might take an extra 30 seconds to process the batch of failures, but the CI environment remains rock-solid and stable.
 
-## Replacing the Orchestrator: The Death of BotHuddle
+## The Orchestration Burden: Multi-Modal Context at Scale
 
-Initially, we orchestrated this entire pipeline using a heavy, centralized cloud agent service we built internally called BotHuddle. It managed the routing of test failures, parsed the logs, and coordinated the cloud-based vision models. But much like our pgvector pivot, BotHuddle was killing our budget due to excessive orchestration token costs, network egress fees, and the sheer overhead of maintaining a distributed orchestration layer just for testing.
+While the port 8002 HTTP Mutex Queue stabilized our GPU runners, funneling multi-modal telemetry through our CI pipeline revealed significant operational challenges. Passing high-resolution video frames and dense DOM skeletons across distributed test runners placed unprecedented demands on our infrastructure.
 
-We made a critical, controversial decision, detailing our rationale in [The Pivot](/2026-07-10-the-pivot). We killed BotHuddle entirely. 
-
-In its place, we adopted the Antigravity framework and its `/teamwork` local commands. This shifted the compute paradigm from a centralized cloud orchestrator to localized edge execution. Now, when a test fails, the CI runner directly triggers a local Antigravity subagent through the CLI right on the machine where the test failed.
+In our cloud-connected agent environment, agents parsing these multi-modal failure artifacts consumed millions of input tokens per test run. When a parallelized CI run encountered multiple failing test shards, the resulting surge in multi-modal LLM inferences and AppSync subscription telemetry caused our AWS and model API bills to spike sharply.
 
 ```bash
-# CI Runner triggers local teamwork command
-agy /teamwork \
-  --goal "Diagnose UI failure in ReceiptUpload" \
+# Diagnostic runner pipes DOM skeleton and video frame to the local visual evaluator
+node ./scripts/diagnose-ui-failure.js \
   --context ./dom_skeleton.html \
-  --image ./failure_frame.png
+  --image ./failure_frame.png \
+  --endpoint http://localhost:8002/v1/eval
 ```
 
-This local execution model passes the distilled DOM skeleton and the extracted high-resolution video frame directly to a localized agent swarm. Because the data never leaves the CI runner, we eliminated network latency and egress costs. The agents use the local HTTP Mutex Queue to analyze the imagery and instantly diagnose visual bugs like z-index overlaps, off-screen absolute positioning errors, and subtle layout shifts caused by asynchronous AppSync data hydration.
+By serializing the distilled DOM skeleton alongside the extracted high-resolution video frame directly into the port 8002 Mutex Queue, the diagnostic runner instantly detects visual bugs like z-index overlaps, off-screen absolute positioning errors, and subtle layout shifts caused by asynchronous AppSync data hydration. But as these multi-modal diagnostic workloads multiply across our fleet, the compounding cost of continuous cloud-orchestrated evaluation is becoming impossible to ignore.
 
 ## Looking Forward: The Future of Autonomous Debugging
 

@@ -20,7 +20,7 @@ The agents were essentially flying blind. We realized that before an agent took 
 
 ## Architectural Overview: The `discover_space` MCP Tool
 
-> **The Motivation:** Our early attempts at Retrieval-Augmented Generation (RAG) relied heavily on Vertex AI and a managed PostgreSQL instance with `pgvector`. While it technically worked, it was costing us hundreds of dollars a month just to run our CI/CD pipelines. We needed a way to run a semantic discovery engine locally during tests and cost-effectively in production, without sacrificing search quality. (For a deeper dive into our shift away from BotHuddle, see our post on [The BotHuddle Pivot](/2026-07-10-the-pivot)).
+> **The Motivation:** Our early attempts at Retrieval-Augmented Generation (RAG) relied heavily on Vertex AI and a managed PostgreSQL instance with `pgvector`. While it technically worked, it was costing us hundreds of dollars a month just to run our CI/CD pipelines. We needed a way to run a semantic discovery engine locally during tests and cost-effectively in production, without sacrificing search quality..
 
 To integrate this discovery engine into our agent workflows, we built `discover_space`, a specialized tool conforming to the Model Context Protocol (MCP). When agents needed historical context or peer state, they would invoke it with natural language. This query translated into a vector embedding for similarity search against our indexed knowledge base.
 
@@ -94,15 +94,13 @@ To solve this definitively, we implemented a strict HTTP Mutex Queue running on 
 
 Instead of processing everything concurrently, we serialize the requests through the mutex. This ensures that only one heavy multimodal embedding task is processed at any given time. While this introduced a slight delay in processing, it completely eliminated the VRAM OOM crashes and stabilized our local testing environments. The agents retained their full visual context without melting our CI runners. (We cover the specifics of this queue and our broader visual testing strategy in our [Visual Regression with Gemini](/2026-07-09-visual-regression-with-gemini) post).
 
-## The End of BotHuddle and The Future of Antigravity
+## Empowering Autonomous Fleet Intelligence
 
-Ultimately, the Semantic Discovery Engine was a resounding technical success. It drastically reduced context collisions, eliminated hallucinated architectures, and saved us thousands of dollars in infrastructure costs.
+Ultimately, the Semantic Discovery Engine proved to be a critical architectural breakthrough for BotHuddle. By giving our agents an in-memory, zero-overhead mechanism to query architectural patterns and domain schemas, we eliminated the context collisions that previously caused agents to duplicate work or hallucinate database models.
 
-However, the lessons we learned extending and maintaining the massive, complex BotHuddle architecture eventually led us to a harder realization. The overhead of coordinating dozens of highly autonomous, unpredictable agents was simply too high for the predictable, deterministic workflows required by NeuroHub's healthcare compliance systems.
+Furthermore, integrating Orama with Gemini embeddings demonstrated that high-performance semantic retrieval could live directly within our serverless ecosystem—powering both agent tool calls and client-side search in our Next.js static applications without spinning up costly database clusters.
 
-We ultimately decided to sunset BotHuddle. But the technology we built—the in-memory Orama indexes, the MCP integration, and the visual testing mutexes—didn't go to waste. 
-
-We transitioned these capabilities directly into our new, localized approach: the Antigravity `/teamwork` local commands. By bringing the agents closer to the developer and focusing their scope through explicit, user-directed commands rather than untethered autonomy, we achieved the productivity gains we always wanted, without the chaos.
+As our fleet grows more capable, this discovery foundation ensures that every agent, whether reviewing code or triaging user requests, operates with accurate, real-time knowledge of our codebase.
 
 ## Conclusion
 

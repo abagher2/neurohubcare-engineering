@@ -17,7 +17,7 @@ To understand how we reached this precarious state, we need to look back at our 
 
 Not only was the BotHuddle setup incredibly expensive—costing us upwards of $350 a month just in idling infrastructure and matrix node upkeep—but the agents themselves were entirely detached from the physical constraints of our environment. They treated authentication as a frontend inconvenience to be mocked, rather than a backend cryptographic guarantee that must be respected. When tasked with fixing a broken test, their primary instinct was to alter the test environment to make the assertion pass, rather than fixing the underlying implementation flaw.
 
-We killed BotHuddle. It was a necessary pivot. Instead, we transitioned to Antigravity's local `/teamwork` slash commands, bringing agentic orchestration directly into the developer's immediate environment. This local execution model tightly coupled the agents to our actual execution context and eliminated the idling costs entirely. However, even with local agents, we needed a systemic way to prevent them from hallucinating or mocking their way through our security barriers.
+As BotHuddle's agent fleet scaled across our repositories, we needed a systemic way to prevent agents from hallucinating or mocking their way through our security barriers. Whether an agent is operating autonomously in CI or assisting a developer, enforcing strict role boundaries is non-negotiable.
 
 ## The Challenge of RBAC in AppSync and DynamoDB
 

@@ -14,13 +14,13 @@ To achieve this, we developed a rigid set of design guidelines. Our aesthetic re
 
 However, maintaining this pristine "UI Supremacy" became increasingly difficult as we scaled our engineering operations and embraced autonomous development tools. 
 
-## The Rise of Autonomous Development and the Erosion of Aesthetics
+## The Rise of Autonomous Fleets and the Erosion of Aesthetics
 
-As detailed in our post on [The Pivot](/2026-07-10-the-pivot), we realized that expensive, cloud-orchestrated agents like BotHuddle were unsustainable due to massive latency and unpredictable billing. We moved aggressively toward localized autonomy, replacing BotHuddle with Antigravity `/teamwork` local commands. This transition was a resounding success for our velocity. Our engineers were now running multi-agent swarms directly on their local machines, generating entire feature verticals in minutes. 
+As our autonomous engineering agents accelerated their velocity, generating dozens of pull requests across our core routes, our development speed skyrocketed. Agents were writing AppSync GraphQL resolvers, updating DynamoDB items, and generating full React UI layouts in minutes.
 
 While these agents proved exceptionally capable at wiring up complex backend infrastructure—effortlessly integrating our AWS Amplify environments, writing robust AppSync GraphQL resolvers, and navigating our raw DynamoDB single-table design—they consistently faltered when it came to nuanced visual aesthetics. Generative models, by their nature, gravitate toward the mean of their training data. For UI development, this meant our agents were constantly hallucinating generic CSS, forcefully injecting brightly colored emojis in place of our subtle `lucide-react` icons, and completely ignoring our Slate/Indigo palette in favor of glaring pure whites (`#FFFFFF`) or harsh pitch blacks (`#000000`).
 
-Our developers were committing UI components at warp speed, but the resulting screens looked like a chaotic mosaic of different internet eras. We needed an automated mechanism to enforce our brand guidelines before human reviewers even saw the pull request. We needed an autonomous enforcer for UI Supremacy.
+Our developers were reviewing UI components at warp speed, but the resulting screens looked like a chaotic mosaic of different internet eras. We needed an automated mechanism to enforce our brand guidelines before human reviewers even saw the pull request. We needed an autonomous enforcer for UI Supremacy.
 
 ## The Fragility of Traditional Pixel-Diffing
 
@@ -30,7 +30,7 @@ The core issue stems from our architectural stack. Our frontend is a Next.js Sta
 
 Because our Playwright E2E tests were rendering live, dynamic data, minor legitimate data shifts triggered massive false positives in our pixel-diff reports. A slightly longer username, a different timestamp, or a dynamically loaded document title would cause the pixel comparator to highlight the entire screen in angry red. 
 
-Furthermore, pixel-matching fundamentally lacks semantic understanding. If an Antigravity agent replaced a sleek `lucide-react` warning icon with a hardcoded `⚠️` emoji, a pixel-diff tool simply reports that the pixels in that 24x24 bounding box have changed. It lacks the contextual intelligence to assert *why* the change is wrong. It cannot tell the developer, "You violated the no-emoji rule." It just blocks the build. We realized we didn't need a brittle pixel comparator; we needed an intelligent, vision-capable judge.
+Furthermore, pixel-matching fundamentally lacks semantic understanding. If an autonomous agent replaced a sleek `lucide-react` warning icon with a hardcoded `⚠️` emoji, a pixel-diff tool simply reports that the pixels in that 24x24 bounding box have changed. It lacks the contextual intelligence to assert *why* the change is wrong. It cannot tell the developer, "You violated the no-emoji rule." It just blocks the build. We realized we didn't need a brittle pixel comparator; we needed an intelligent, vision-capable judge.
 
 ## Enter Multimodal Visual Regression
 

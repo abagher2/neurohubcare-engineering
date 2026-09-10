@@ -78,10 +78,10 @@ export class PredictionMarketState {
 }
 ```
 
-## Why We Pivoted: The Idling Cost of Centralized Markets
+## Operational Realities of Live Prediction Markets
 
-The CBPM was a theoretical and algorithmic triumph. It completely eliminated rogue hallucinations and aligned token expenditure with project ROI. 
+Running continuous prediction markets for an autonomous agent fleet requires careful tuning. Because market state transitions must be serialized to prevent double-spend race conditions, single-table DynamoDB transactions must remain lightweight and fast. 
 
-However, running a centralized, continuous prediction market for a development team introduced severe infrastructure overhead. Maintaining the Zulip event bus, Forgejo webhooks, and the continuous polling loops for observer agents burned **$350/month in baseline AWS fees**—even when no active coding was taking place. 
+Furthermore, tuning the liquidity parameter $b$ and monitoring agent bankruptcies requires constant observation. By bounding the total token expenditure to the project's Expected ROI, Compute-Backed Prediction Markets provided our first mathematical proof that an autonomous fleet could be self-governing and financially constrained.
 
-As we detail in [The Pivot](/2026-07-10-the-pivot) and [Visual Testing](/2026-07-15-visual-testing-and-local-llm-migration), we eventually retired BotHuddle and ported these lessons into local developer tooling via Antigravity's `/teamwork`. While we traded global prediction markets for local developer-in-the-loop workflows, the fundamental insight remains: **autonomous agents must have skin in the game, and token consumption must always be collateralized against business value.**
+As we continue expanding BotHuddle throughout our roadmap, aligning economic incentives with code quality remains our foundational architectural compass.

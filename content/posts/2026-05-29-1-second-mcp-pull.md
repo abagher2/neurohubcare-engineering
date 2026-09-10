@@ -92,12 +92,8 @@ We documented our failed experiments rigorously to prevent future teams from rep
 - **Custom WebSocket Firehose**: We attempted building a custom WebSocket server on top of API Gateway to blast raw events directly at the LLMs. This forced the stateless agents to manage complex internal state machines and manually reconstruct the chat history. This defeated the entire standardized purpose of the Model Context Protocol. AppSync gave us the structured, typed streaming we needed without the custom boilerplate.
 - **Containerized Redis Caching**: We briefly flirted with spinning up Dockerized Redis clusters to hold the pre-computed context strings in memory for faster reads. However, this blatantly violated our strict serverless AWS Amplify mandates, introduced unacceptable operational overhead, and required managing VPC peering which we explicitly avoid.
 
-## The Final Fate of BotHuddle
+## Unlocking Sub-Second Agent Coordination
 
-The eager MCP resolution architecture was, without a doubt, a technical marvel. We successfully slashed context load times, which was particularly critical when our agents were running heavy, multi-step asynchronous tasks like evaluating complex frontend visual regressions (a challenging topic we detail extensively in [Visual Testing](/2026-07-15-visual-testing-and-local-llm-migration)). 
+Achieving sub-second context injection was a monumental engineering milestone for BotHuddle. By shifting from naive REST polling to WebSocket streaming over AppSync, our agents could begin reasoning almost instantly upon receiving a task.
 
-Yet, for all its undeniable technical brilliance and sub-second performance, the BotHuddle architecture harbored a fatal business flaw. 
-
-The baseline cost of keeping this distributed, event-driven agent matrix alive was staggering. Idling the Zulip server, running the Forgejo instance, keeping the SQS queues constantly polling, paying for NAT Gateway data transfer fees, and keeping the AppSync GraphQL subscriptions hot for dozens of agents ran us over $350/month in pure idle costs. We were paying a premium just for agents to sit around waiting for work. 
-
-Faced with this absurd cloud overhead for internal tooling, we made the hard, pragmatic call to kill BotHuddle entirely. We tore down the Zulip and Forgejo integrations, deprecated the AppSync subscriptions, and pivoted to Antigravity's local `/teamwork` slash commands. By shifting the agent orchestration and context loading strictly to the developer's local machine, we achieved the exact same 1-second context injection latency with absolutely zero AWS cloud bills. It was a humbling, powerful reminder that the best infrastructure is sometimes no infrastructure at all.
+This speed unlocked entirely new possibilities for real-time peer review and collaborative multi-agent problem-solving. As we scale the BotHuddle fleet into more complex multi-step workflows, maintaining this 1-second context boundary ensures our agents spend their time reasoning, not waiting.

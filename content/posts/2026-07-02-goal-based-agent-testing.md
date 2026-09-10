@@ -71,13 +71,16 @@ However, running this concurrently introduced massive stability issues. When Pla
 
 We explicitly enforce `fullPage: true` so the LLM gets the entire context of the page, completely sidestepping the need to crop images—a practice that historically confused the AI about layout geometry and nested component hierarchies. If the UI requires an element to be sticky, the visual AI must recognize it in its scrolled state. By processing these `fullPage: true` captures sequentially through the port 8002 Mutex Queue, we maintain high throughput without risking the hardware limits. The Mutex Queue essentially acts as a traffic cop for our VRAM, ensuring that no matter how aggressively Playwright scales its workers, the LLM inferences remain stable and deterministic.
 
-## The Shift from Cloud to Local Multi-Agent Testing
+## Orchestrating Multi-Agent Swarms for Collaborative Goals
 
-Early on, we experimented with complex, cloud-hosted multi-agent swarms to test collaborative goals. We relied heavily on BotHuddle for these orchestrations. We imagined a future where agents could seamlessly debate architecture in the cloud before writing a line of code.
+Testing a single agent is challenging; testing collaborative swarms across BotHuddle is an order of magnitude more complex. In our architecture, complex objectives often require multiple specialized agents working in concert. We spin up specialized personas within the BotHuddle matrix: a 'Planner' agent evaluates the goal and proposes DynamoDB schema updates, while a 'Frontend' agent updates the Next.js components to consume the GraphQL queries.
 
-However, the reality was far less glamorous. The operational overhead was immense. BotHuddle operated as a black box; when subagents failed to communicate, we couldn't easily inspect the message bus to understand why. Network flakiness ruined the deterministic nature of our tests, and the API costs for inter-agent communication were completely unjustifiable. 
+To keep these multi-agent interactions deterministic, our test harness intercepts inter-agent messaging:
+- **State Auditing**: Every proposal emitted by an agent is captured in our DynamoDB test table and verified against our strict `Builder.build()` schemas.
+- **Cycle Detection**: If the Planner and Coder agents enter a circular revision loop without progressing toward the goal criteria, the test runner trips a circuit breaker and marks the test as a goal failure.
+- **Token Efficiency Bounds**: Each goal evaluation has a strict ceiling on token consumption and tool invocations.
 
-As covered in [Life After BotHuddle](/2026-07-17-life-after-bothuddle), we ultimately killed the BotHuddle integration. Today, we achieve the same level of multi-agent testing entirely locally. Using the Antigravity `/teamwork` command, we spawn specialized subagents directly on the test runner's machine. Because it runs locally, we can tail the logs in real-time. We can watch a 'Planner' agent safely delegate DynamoDB schema updates to a 'Backend' subagent, while simultaneously directing a 'Frontend' subagent to update the Next.js components to consume the new GraphQL queries. This all happens within the isolated local sandbox, ensuring airtight security, zero cloud latency, and reproducible results.
+This gives our engineering team quantitative visibility into whether multi-agent collaboration actually improves problem-solving speed or simply burns tokens in circular debates—a critical metric as we monitor the operational overhead of our fleet.
 
 ## Conclusion
 

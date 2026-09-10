@@ -81,7 +81,7 @@ It then packages this rich, highly specific failure context into a prompt payloa
 
 The orchestrator agent wakes up, ingests the failure context, and attempts the task again. This self-correction loop drastically reduces the cognitive load on human engineers. We no longer have to manually explain to an agent why its code was bad, or what specific rule it violated. The pipeline acts as a strict but helpful mentor, automatically providing the agent with exactly the feedback it needs to succeed on the second attempt. 
 
-This mechanism is a stark departure from our earlier, more monolithic approaches. We used to rely on sprawling, complex orchestration engines, but as detailed in [The Pivot](/2026-07-10-the-pivot), we found that keeping things local and event-driven yielded far better results. By utilizing our own Antigravity `/teamwork` local commands rather than external, heavy platforms, we maintained tight control over the execution environment and kept costs remarkably low.
+This mechanism guarantees that our CI pipeline remains completely self-healing. By utilizing event-driven Git rollbacks, we maintain tight control over the execution environment and keep our deployment branch perpetually green.
 
 ## Technical Tradeoffs and Future Iterations
 

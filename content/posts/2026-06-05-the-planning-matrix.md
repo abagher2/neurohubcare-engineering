@@ -20,14 +20,6 @@ If an agent acquires a lock, reads the database state, spends a full minute "thi
 
 To prevent these autonomous actors from corrupting domain state or entering catastrophic retry loops, we designed and built **The Planning Matrix**, a robust, in-memory spatial-temporal reservation system native to our AWS Amplify and DynamoDB stack.
 
-## The Pivot from BotHuddle to Antigravity
-
-Our journey to The Planning Matrix was not a straight line. Initially, we attempted to orchestrate our multi-agent matrix using BotHuddle, running on a custom Zulip/Forgejo architecture. We thought that treating agents like chat participants in a persistent matrix would elegantly solve coordination. 
-
-However, we quickly realized that maintaining an always-on, persistent cluster for agent coordination was a massive architectural mistake and prohibitively expensive. BotHuddle was burning over $350/mo purely in idling infrastructure costs, long before we even factored in the actual LLM inference overhead or the operational burden of managing a parallel messaging architecture just for machines. 
-
-Consequently, we made the hard decision to kill the BotHuddle integration entirely. We pivoted completely to utilizing Antigravity's local `/teamwork` slash commands for orchestration. This shift allowed us to execute highly localized, on-demand agent interactions directly within our Next.js architecture, leaning entirely on our serverless AWS infrastructure (DynamoDB, AppSync, EventBridge) to manage state, rather than a separate chat matrix.
-
 ## The Vector of Intent
 
 We needed a mechanism for agents to definitively "call their shots" *before* they initiated their expensive LLM reasoning cycles. Instead of locking a database row, which blocks all reads and writes, an agent submits a "Vector of Intent" to the Planning Matrix. 

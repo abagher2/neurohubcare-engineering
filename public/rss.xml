@@ -5,7 +5,7 @@
     <link>https://blog.neurohubcare.com</link>
     <description>Chronicles of building the AI-native operating system for neurodiversity care.</description>
     <language>en-us</language>
-    <lastBuildDate>Thu, 10 Sep 2026 21:42:48 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 10 Sep 2026 23:22:10 GMT</lastBuildDate>
     <atom:link href="https://blog.neurohubcare.com/rss.xml" rel="self" type="application/rss+xml" />
     
     <item>
@@ -142,11 +142,11 @@
       <description><![CDATA[How our multimodal testing suite cost us $100 a day in Gemini API fees, and how we built a serialized LLM queue to run full-page inference locally.]]></description>
     </item>
     <item>
-      <title><![CDATA[The Pivot: Why We Killed BotHuddle]]></title>
+      <title><![CDATA[The Pivot: Why We Paused BotHuddle]]></title>
       <link>https://blog.neurohubcare.com/2026-07-10-the-pivot</link>
       <guid isPermaLink="true">https://blog.neurohubcare.com/2026-07-10-the-pivot</guid>
       <pubDate>Fri, 10 Jul 2026 00:00:00 GMT</pubDate>
-      <description><![CDATA[Faced with $350/month in AWS fees for idling agents, we made the painful decision to abandon BotHuddle and pivot to Antigravity's /teamwork.]]></description>
+      <description><![CDATA[Faced with $350/month in AWS fees for idling agents, we made the strategic decision to pause BotHuddle and pivot to on-demand execution with Antigravity's /teamwork—keeping the architecture ready to pick up again later.]]></description>
     </item>
     <item>
       <title><![CDATA[Enforcing UI Supremacy: Visual Regression via Gemini]]></title>
@@ -272,7 +272,7 @@
       <link>https://blog.neurohubcare.com/2026-04-28-the-engineering-mandate</link>
       <guid isPermaLink="true">https://blog.neurohubcare.com/2026-04-28-the-engineering-mandate</guid>
       <pubDate>Tue, 28 Apr 2026 00:00:00 GMT</pubDate>
-      <description><![CDATA[Building NeuroHub manually would take years of navigating complex California regulations. Here is why we decided to automate our engineering team.]]></description>
+      <description><![CDATA[Building NeuroHub manually would take years of navigating complex California regulations. Here is why we decided to build BotHuddle to automate our engineering team.]]></description>
     </item>
   </channel>
 </rss>

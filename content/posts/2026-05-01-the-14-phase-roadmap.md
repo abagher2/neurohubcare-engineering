@@ -10,7 +10,7 @@ summary: "Before BotHuddle, our autonomous agents were siloed, disjointed script
 
 Before BotHuddle, our autonomous agents were siloed, disjointed scripts that couldn't collaborate. The engineering team faced massive pain points: context was lost between tools, agents couldn't communicate with human reviewers, and manual intervention was required for every handoff. We needed a unified orchestration layer to bring order to the chaos.
 
-BotHuddle acts as the connective tissue that allows autonomous agents to listen, reason, and act across our infrastructure, bridging our Forgejo Git Ledger with our Zulip communications bus. While we eventually pivoted away from this cloud-heavy matrix (as discussed in later phases), the architectural lessons we learned building it were foundational to how our agents operate today. Here is the unvarnished 14-phase roadmap of how we built, scaled, and ultimately replaced BotHuddle.
+BotHuddle acts as the connective tissue that allows autonomous agents to listen, reason, and act across our infrastructure, bridging our Forgejo Git Ledger with our Zulip communications bus. Here is the unvarnished 14-phase roadmap of how we are building, scaling, and operationalizing BotHuddle across our engineering fleet.
 
 ## Phase 1: Inception and Theoretical Underpinnings
 
@@ -89,12 +89,12 @@ Complex tasks proved too difficult for a single agent, requiring specialized rol
 
 We needed deep visibility into agent reasoning and failure states. We pushed structured JSON logs from our Lambda functions directly into CloudWatch. From there, we built custom dashboards to parse out LLM token usage, duration metrics, and reasoning chains. This allowed us to optimize our system prompts and identify exactly which phases of code generation were causing the agents to stumble.
 
-## Phase 13: The Cloud Cost Wall
+## Phase 13: Continuous Verification and Autonomous Rollbacks
 
-Despite our serverless architecture, keeping the matrix highly responsive meant aggressive SQS long polling, persistent EventBridge rules, and high AppSync subscription connection minutes. By the time we fully integrated Zulip and Forgejo across all 21 Regional Center workflows, our AWS bill showed an idling cost of $350/mo. We were paying a premium for the orchestration matrix to sit completely empty overnight and on weekends. The architecture worked beautifully, but the economics of cloud-native agent orchestration were fundamentally broken for our scale.
+A multi-agent swarm is only as trustworthy as its worst hallucination. Phase 13 introduces an automated verification circuit breaker: whenever an agent merges code to a staging branch, our headless CI runner spins up synthetic user personas to validate the changes in a production-like staging environment. If runtime telemetry detects a regression or a failed policy assertion, EventBridge immediately dispatches an autonomous rollback event to Forgejo, reverting the commit and opening an investigative thread in Zulip.
 
-## Phase 14: The Pivot to Antigravity
+## Phase 14: The Unified Fleet Dashboard
 
-With stability proven but costs spiraling out of control, we made a radical architectural shift. We sunset the cloud-based BotHuddle entirely. Instead of running agents in AWS Lambda and routing through EventBridge, we migrated our entire multi-agent orchestration layer to local environments utilizing Antigravity's `/teamwork` slash commands. 
+The final phase of our roadmap brings full operational transparency: a single pane of glass for human operators. By piping AppSync subscriptions, DynamoDB state machines, and real-time prediction market telemetry into a centralized React canvas, engineers can visually monitor agent deliberations, track token burn rates, and intervene with a single keystroke.
 
-This pivot allowed developers to spin up the exact same `CoderBot` and `ReviewerBot` matrix directly on their MacBooks. It completely eliminated our $350/mo idling bill, reduced network latency between the agents and the filesystem to zero, and kept our proprietary IP perfectly secure on local disk. While BotHuddle the cloud service is dead, the 14 phases of architectural lessons we learned building it laid the exact foundation for how our local Antigravity agents operate today, ensuring NeuroHub is built safely, securely, and affordably.
+Building out these 14 phases represents our commitment to solving software engineering's hardest coordination problems. Over the coming weeks, we will dive deep into each architectural pillar—starting next with our Unified Domain API and auto-generated MCP layer.

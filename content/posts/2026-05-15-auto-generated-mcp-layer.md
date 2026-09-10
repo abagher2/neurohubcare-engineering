@@ -68,16 +68,15 @@ await eventBridgeClient.putEvents({
 
 This decoupled, event-driven architecture prevented brittle timeout issues when agents interacted with slow external systems. It allowed the BotHuddle matrix to remain highly responsive, ensuring that agents weren't left hanging waiting for an HTTP request that had long since died.
 
-## Operational Overhead and the Pivot
+## Unlocking Scalable Tool Execution
 
-The Auto-Generated MCP Layer was, by all accounts, a massive technical triumph for our team. It drastically reduced context window usage, eliminated API hallucinations, and allowed us to rapidly add new capabilities to our agents simply by editing a YAML file. However, the operational reality of running this highly decoupled, event-driven architecture 24/7 quickly became an untenable burden.
+The Auto-Generated MCP Layer proved to be a massive technical milestone for our BotHuddle ecosystem. By synthesizing compact JSON-RPC tool definitions directly from `HuddleSchema`, we accomplished three critical engineering goals:
+1. **Context Window Preservation**: System prompt overhead shrank by over 65%, freeing up precious context space for actual code diffs, logs, and AST representations.
+2. **Schema-Enforced Accuracy**: Tool calls mapped directly to typed DynamoDB builders and AppSync mutations, reducing tool invocation runtime failures to near zero.
+3. **Frictionless Capability Expansion**: Adding a new engineering capability to our fleet now takes minutes—define the mutation in `HuddleSchema`, and the build pipeline automatically exposes type-safe MCP bindings to all agent personas.
 
-Maintaining the infrastructure for this continuous matrix proved exhausting. We were processing a constant, low-level stream of SQS messages, running complex EventBridge rules just to handle agent heartbeats and presence updates, and paying for idle DynamoDB capacity to track the state of agents that were mostly doing nothing. 
+## The Next Frontier: Resource Allocation in an Autonomous Fleet
 
-This idle state cost us $350/mo. While that might not sound astronomical for an enterprise, it represented pure waste. We were paying for the *potential* of agent action, rather than actual compute time used to solve problems. The overhead of a persistent, always-on multi-agent cloud environment was fundamentally misaligned with the bursty, episodic nature of how we actually wanted to use AI agents.
+With our agents now equipped to inspect pull requests, query telemetry, and commit code via standardized MCP interfaces, a new challenge immediately emerged: coordination economics. If multiple agents can autonomously call tools and trigger expensive compute, how do we prevent agents from spamming tools or competing for the same tasks?
 
-Ultimately, we made the painful but necessary decision to kill BotHuddle. We realized that agents didn't need a persistent, expensive cloud matrix to be effective; they needed highly contextual, on-demand execution environments. We completely pivoted away from cloud-hosted matrices to Antigravity's local `/teamwork` slash commands. 
-
-This shift gave us the same powerful, multi-agent collaborative capabilities, but executed entirely locally on the developer's machine. It was ephemeral, incredibly fast, and most importantly, carried zero cloud idling costs. This profound transition to local-first execution also unlocked entirely new workflows for us, which we explored deeply in our transition to [Visual Testing](/2026-07-15-visual-testing-and-local-llm-migration) and local LLM execution. 
-
-While the BotHuddle cloud matrix has been retired, the core principles of auto-generated tooling, strict schemas, and event-driven decoupling remain central to how we architect systems at NeuroHub today.
+In our next post, we dive into how we solved agent resource allocation and consensus through an internal prediction market: [The LMSR Prediction Economy: Allocating Silicon Units Across Swarms](/2026-05-22-lmsr-prediction-economy).

@@ -9,13 +9,13 @@ summary: "Our CI pipeline was failing over 40% of the time, not because of bugs,
 
 In our journey to fully autonomous UI generation, we hit a massive, unexpected bottleneck: our Continuous Integration (CI) pipeline was failing over 40% of the time. The deeply frustrating part? These weren't actual functional bugs. The applications worked perfectly. The failures were entirely due to our autonomous agents aggressively tweaking layouts, updating copy, and refactoring DOM structures in their pursuit of the optimal user experience. 
 
-Traditional End-to-End (E2E) testing with frameworks like Playwright relies heavily on deterministic, exact-match DOM assertions. When an agent, driven by Antigravity's local `/teamwork` slash commands, decided that a primary action button should say "Complete Workflow" instead of "Submit Form," our tests would instantly shatter. Engineers were spending hours every single week manually repairing brittle `expect(locator).toHaveText()` assertions, completely stalling our Next.js Static Export deployments and creating massive friction in our delivery pipeline.
+Traditional End-to-End (E2E) testing with frameworks like Playwright relies heavily on deterministic, exact-match DOM assertions. When an autonomous agent in our fleet decided that a primary action button should say "Complete Workflow" instead of "Submit Form," our tests would instantly shatter. Engineers were spending hours every single week manually repairing brittle `expect(locator).toHaveText()` assertions, completely stalling our Next.js Static Export deployments and creating massive friction in our delivery pipeline.
 
 ## The Flaw of Deterministic UI Testing
 
 Our tech stack at NeuroHub—a statically exported Next.js frontend communicating with AWS AppSync and DynamoDB—allows us to iterate incredibly fast on the presentation layer. The backend data structures are rigidly enforced (as detailed in our [Strict ORM Builders](/2026-09-18-strict-orm-builders) post), but the frontend UI is highly fluid.
 
-When we killed our legacy BotHuddle multi-agent matrix on Zulip/Forgejo (which was bleeding $350/month in idling infrastructure costs) and pivoted to using local Antigravity agents directly in the developer environment, the speed of UI iteration skyrocketed. Agents were constantly A/B testing copy, improving accessibility labels, and optimizing complex user flows based on feedback loops. 
+As we accelerated the deployment of our autonomous agents, the speed of UI iteration skyrocketed. Agents were constantly A/B testing copy, improving accessibility labels, and optimizing complex user flows based on feedback loops. 
 
 Deterministic E2E tests are fundamentally incompatible with this level of flux. Image snapshot testing (visual regression testing) was even worse; a single pixel shift in margin or a font anti-aliasing change would cause a catastrophic build failure. We needed a way to verify that a feature worked *conceptually*, without tying the test to a specific DOM node, a literal string of text, or a specific visual layout. We needed semantic verification.
 

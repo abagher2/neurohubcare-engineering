@@ -18,14 +18,6 @@ Most critically, LLMs do not handle HTTP 403 errors gracefully. When a tradition
 
 To solve this fundamental incompatibility, we implemented **Semantic Identity** via the **Global Agent ID (GAID)**, completely overhauling how identity works for machines. We linked an agent's existence directly to its prompt, its specific operational purpose, and its Git lineage.
 
-## The Evolution of Agent Identity and the BotHuddle Pivot
-
-In the early days of our agentic architecture, we experimented with semantic tracing during our deployment of BotHuddle, running on a custom Zulip/Forgejo stack. We attempted to manage identity by treating agents as chat users, mapping their roles to chat channels and group permissions. 
-
-However, as documented in our infrastructure post-mortems, BotHuddle was a financial and operational nightmare. The persistent idling cost of maintaining a parallel chat matrix just for machines cost us over $350/mo. We were maintaining dual sources of truth for identity: Cognito for humans, and BotHuddle for agents. 
-
-We made the strategic decision to kill BotHuddle and pivot toward Antigravity's local `/teamwork` slash commands. Moving away from a chat-based matrix required us to natively integrate agent identity deeply into our Next.js and AWS serverless stack. We could no longer rely on chat handles or virtual group memberships; we needed cryptographic, strictly verifiable identities that flowed seamlessly and securely through AWS AppSync, EventBridge, and DynamoDB.
-
 ## The Spawn Hash: Cryptographic Lineage
 
 Rather than generating random UUIDs using a standard library, an agent's GAID is deterministically computed at the exact moment it is spawned. The identifier explicitly embeds the semantic context of its creation, providing immediate, understandable context to any downstream LLM or human auditor that encounters it. 
