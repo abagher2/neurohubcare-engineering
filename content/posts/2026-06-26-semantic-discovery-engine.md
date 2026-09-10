@@ -1,279 +1,113 @@
 ---
-title: "Building a Semantic Discovery Engine for Autonomous Agent Governance"
+title: "Killing pgvector: Why We Built an In-Memory Semantic Engine with Orama"
 date: "2026-06-26"
 slug: "semantic-discovery-engine"
 summary: "A deep dive into how NeuroHub built a Semantic Discovery Engine using PostgreSQL and pgvector to govern our BotHuddle multi-agent architecture and prevent agents from colliding."
 tags: ["Databases", "pgvector", "BotHuddle", "AI Agents", "TypeScript", "Python"]
 ---
 
-As NeuroHub's autonomous agent fleet (affectionately named "BotHuddle") scaled from a handful of experimental co-pilots to an interconnected swarm of dozens of specialized workers, we encountered a fundamental distributed systems problem: **Agent Context Collision and Governance.**
+As our autonomous agent fleet—affectionately (and sometimes frustratingly) known as BotHuddle—scaled up to handle increasingly complex workflows, we encountered a fundamental engineering problem: **Agent Context Collision.** Agents working on related tasks would step on each other's toes, duplicate work, or hallucinate context based on incomplete state. 
 
-In a multi-agent system where different agents handle everything from code refactoring to database migrations and customer support inquiries, keeping them from stepping on each other’s toes—or duplicating work—becomes a massive challenge. When Agent A is refactoring a React hook in `src/components`, and Agent B is simultaneously updating the global state management strategy that affects that same hook, the result is often chaotic merge conflicts, redundant API calls, and context loss. 
+To solve this, we needed a **Semantic Discovery Engine**—a centralized brain that could index past Git commits, Zulip discussions, ADRs, and application state, allowing agents to perform semantic search before acting. This post explores our journey from an initial, expensive PostgreSQL architecture to a lean, in-memory solution that aligns with our core AWS Amplify and Next.js stack.
 
-To solve this, we needed a way for agents to implicitly discover the ongoing and historical context of their peers. We needed a **Semantic Discovery Engine**—a centralized brain that indexes past Git commits, ongoing Zulip discussion summaries, and architecture decision records (ADRs), allowing any agent to perform a semantic search before it acts.
+## The Problem: Blind Agents in a Complex System
 
-In this deep dive, we will explore how we built our `discover_space` MCP (Model Context Protocol) tool, why we chose PostgreSQL with `pgvector` over dedicated vector databases, the mathematical foundations of our indexing strategy, and the concrete TypeScript and Python implementations powering BotHuddle governance.
+When we first deployed BotHuddle, the vision was grand: multiple autonomous agents working in parallel to triage issues, draft documentation, and assist with complex compliance workflows in NeuroHub. However, the reality was much messier. Because agents operated with limited, ephemeral context windows, they lacked a long-term memory of what had been decided or attempted previously.
 
-## The Context Collision Problem
+For example, Agent A might spend ten minutes researching and drafting a fix for a UI bug, only for Agent B to unknowingly revert those changes an hour later while trying to solve a seemingly related layout issue. Worse, when asked to consult architectural guidelines, agents would often hallucinate solutions based on their pre-training data rather than adhering to our internal Architecture Decision Records (ADRs). 
 
-Before implementing semantic discovery, our BotHuddle governance relied on strict, rule-based boundaries (e.g., "Agent A only touches `/src/lib/orm`"). However, modern software engineering is highly cross-functional. A change in the ORM might necessitate a UI update. 
-
-When agents lacked semantic context of the broader system and the actions of their peers, they suffered from:
-1. **Redundant Work:** Multiple agents investigating the same bug ticket because they were triggered by different alert systems.
-2. **Destructive Interference:** Agent A reverting a styling change made by Agent B because Agent A was unaware of the new design system guidelines discussed in a Zulip thread.
-3. **Hallucination via Isolation:** Agents hallucinating APIs or context because they couldn't find the correct historical Git commit that introduced a new service pattern.
-
-We realized that agents, much like human engineers, need a "watercooler"—a way to overhear what others are working on and search through the company's collective memory.
+The agents were essentially flying blind. We realized that before an agent took any significant action, it needed to query a shared, persistent knowledge base. We needed a Semantic Discovery Engine.
 
 ## Architectural Overview: The `discover_space` MCP Tool
 
-To expose this capability to our agents, we built `discover_space`, a tool conforming to the Model Context Protocol (MCP). When an agent begins a task, it invokes `discover_space` with a natural language description of its intent. The tool translates this intent into a vector embedding, performs a similarity search across our corpus, and returns highly relevant context chunks.
+> **The Motivation:** Our early attempts at Retrieval-Augmented Generation (RAG) relied heavily on Vertex AI and a managed PostgreSQL instance with `pgvector`. While it technically worked, it was costing us hundreds of dollars a month just to run our CI/CD pipelines. We needed a way to run a semantic discovery engine locally during tests and cost-effectively in production, without sacrificing search quality. (For a deeper dive into our shift away from BotHuddle, see our post on [The BotHuddle Pivot](/2026-07-10-the-pivot)).
+
+To integrate this discovery engine into our agent workflows, we built `discover_space`, a specialized tool conforming to the Model Context Protocol (MCP). When agents needed historical context or peer state, they would invoke it with natural language. This query translated into a vector embedding for similarity search against our indexed knowledge base.
 
 ```mermaid
 flowchart TD
-    subgraph BotHuddle Agents
-        A[Agent A: Frontend]
-        B[Agent B: Backend]
-        C[Agent C: DevOps]
-    end
-
-    subgraph MCP Server Layer
-        MCP[discover_space MCP Tool]
-    end
-
-    subgraph Embedding Service
-        EMB[OpenAI text-embedding-3-small]
-    end
-
-    subgraph Vector Database
-        PG[(PostgreSQL + pgvector)]
-        IDX[HNSW Index]
-    end
-
-    subgraph Ingestion Pipeline
-        Z[Zulip Summaries]
-        G[Git Commits]
-        D[ADRs / Docs]
-    end
-
-    A -->|1. Search Intent| MCP
-    B -->|1. Search Intent| MCP
-    C -->|1. Search Intent| MCP
-
-    MCP -->|2. Get Embedding| EMB
-    EMB -->|3. Return Vector| MCP
-    MCP -->|4. ANN Search| PG
-    PG -->|5. Match Context| MCP
-    MCP -->|6. Formatted Context| A
-
-    Z -->|Batch/Stream| PG
-    G -->|Batch/Stream| PG
-    D -->|Batch/Stream| PG
+    A[Agent] --> MCP[discover_space]
+    MCP --> DB[Semantic Index]
+    DB --> A
 ```
 
-## Why pgvector? (Alternative Approaches Considered)
+The concept was simple: whenever an agent encountered ambiguity, it would call `discover_space` to "look around" and gather semantic context.
 
-When building a semantic search engine, the immediate instinct is to reach for a specialized vector database. We evaluated several alternatives before settling on PostgreSQL with `pgvector`.
+## The Initial (And Flawed) pgvector Decision
 
-### 1. Dedicated SaaS Vector DBs (Pinecone, Weaviate)
-**Pros:** Fully managed, highly optimized for vector search, built-in chunking strategies in some cases.
-**Cons:** We already use PostgreSQL for our primary application data. Introducing a separate SaaS vector database would mean maintaining complex synchronization pipelines. When a Git commit is reverted, or a Zulip message is deleted, we would have to implement two-phase commits to ensure the vector database stays in sync with the relational database. Data privacy was also a concern; sending highly sensitive architectural discussions to a third-party vector store required additional compliance reviews.
+We initially chose PostgreSQL with `pgvector` over dedicated SaaS vector databases, believing we needed to maintain strict relational integrity. The theory was that storing embeddings alongside relational metadata would allow us to combine vector similarity with SQL filters, ensuring ACID compliance. We configured **HNSW** indexes for sub-millisecond latencies and high recall.
 
-### 2. Elasticsearch / OpenSearch (k-NN)
-**Pros:** Excellent hybrid search (combining exact keyword match with dense vector search).
-**Cons:** JVM memory overhead and complex cluster management. While Elasticsearch's dense vector capabilities have improved, managing a separate ES cluster solely for agent context was operational overkill compared to adding an extension to our existing Postgres instances.
+However, this design completely contradicted our established architecture. NeuroHub is built entirely on AWS Amplify, DynamoDB, AppSync GraphQL, and Next.js Static Exports. Introducing an RDS instance strictly for vector search created a massive impedance mismatch. 
 
-### 3. Qdrant / Milvus
-**Pros:** High performance, purpose-built for massive scale.
-**Cons:** Similar to the Pinecone argument—adding another stateful component to our infrastructure for a corpus of ~10 million embeddings (Zulip + Git + Docs) is unnecessary when Postgres can handle it easily.
+Not only did it force us to manage database connections and VPCs—something our serverless stack had gracefully avoided—but it also broke our local development story. Running a heavy Postgres container locally just for agent tests was a massive bottleneck. 
 
-### The pgvector Decision
-`pgvector` allows us to store embeddings directly alongside our relational metadata. We can execute queries that combine vector similarity with strict SQL filters (e.g., "Find context related to 'React hooks' but ONLY from the 'frontend' team channel in Zulip within the last 30 days"). ACID compliance is guaranteed. If an agent creates a new architectural document and generates an embedding for it, both are committed in a single transaction.
+Furthermore, we found ourselves mixing Python scripts for semantic chunking and embedding generation with our TypeScript backend. This language split led to painful context switching, fragmented deployment pipelines, and a fragile integration layer where data types frequently mismatched between the Python ingestion scripts and the TypeScript querying logic.
 
-## Theoretical Foundations: HNSW vs. IVFFlat
+## The True Cost of Statefulness
 
-In vector search, finding the absolute closest vector (K-Nearest Neighbors, or KNN) requires calculating the distance between the query vector and every single vector in the database. This is an $O(N)$ operation, which becomes unacceptably slow as the dataset grows.
+The financial toll of our Postgres setup became apparent quickly. Because our CI/CD pipelines spun up isolated testing environments for every pull request, we were provisioning and tearing down multiple RDS instances daily. The compute costs skyrocketed. 
 
-To achieve sub-millisecond latencies, we use **Approximate Nearest Neighbor (ANN)** search. `pgvector` supports two primary indexing algorithms: `IVFFlat` (Inverted File Flat) and `HNSW` (Hierarchical Navigable Small World).
+Even worse, the operational overhead was draining our engineering velocity. We spent hours debugging VPC peering issues and tuning Postgres memory configurations just to keep the tests running reliably. We were spending more time managing the database than improving the agents.
 
-We chose **HNSW**.
+We realized a critical truth: we didn't need full ACID compliance for our semantic search. The knowledge base consisted mostly of static documents, historical commit logs, and loosely structured discussion threads. It didn't require the strict transactional guarantees of a relational database. We just needed fast, ephemeral similarity matching that could be hydrated on demand.
 
-### Why HNSW?
-1. **IVFFlat** works by clustering vectors into $N$ lists (Voronoi cells) using k-means. To search, it finds the closest centroids and only searches within those clusters. The downside? You must build the index *after* loading a substantial amount of data so the centroids are representative. If your data distribution changes (e.g., you start ingesting a new type of log), the index degrades.
-2. **HNSW** builds a multi-layered graph. The bottom layer contains all vectors connected to their nearest neighbors. Higher layers contain exponentially fewer vectors, acting as "expressways" to quickly navigate the graph. 
-   - **Search:** Starts at the top layer, finds the closest node, drops down a layer, and repeats until it hits the bottom layer.
-   - **Pros:** Extremely fast, high recall, and allows for incremental updates without degrading performance. No training phase required.
+## The Pivot to Orama and Gemini
 
-Our index creation looks like this:
+With our serverless constraints firmly in mind, we ripped out the Postgres cluster and pivoted entirely. We needed a solution that was lightweight, incredibly fast, and crucially, capable of running seamlessly in both our Next.js edge functions and local developer environments.
 
-```sql
-CREATE TABLE agent_context (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    source_type VARCHAR(50) NOT NULL, -- 'zulip', 'git', 'adr'
-    content TEXT NOT NULL,
-    metadata JSONB,
-    embedding vector(1536), -- text-embedding-3-small dimensionality
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+Enter **Orama**—an immensely powerful, in-memory, edge-compatible search engine written entirely in TypeScript. Combined with Gemini's embedding models, this pivot completely eliminated our RDS costs and eradicated the operational nightmare of managing persistent database clusters.
 
--- HNSW index using cosine distance (<=>)
-CREATE INDEX ON agent_context USING hnsw (embedding vector_cosine_ops)
-WITH (m = 16, ef_construction = 64);
-```
-*(Note: `m` defines the maximum number of connections per element in the graph, and `ef_construction` defines the size of the dynamic list used during index construction. Tuning these parameters balances index build time, memory usage, and search recall.)*
-
-## Ingesting Context: Python Pipeline
-
-The ingestion layer is written in Python, utilizing standard NLP libraries for chunking before calling the OpenAI API. Since Git commits can be massive (e.g., a package-lock.json update), and Zulip threads can span hundreds of messages, intelligent chunking is crucial. We use semantic chunking to ensure embeddings capture discrete concepts rather than arbitrary text fragments.
-
-```python
-import os
-import psycopg2
-from openai import OpenAI
-from sentence_transformers import SentenceTransformer
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-# Use Langchain's robust text splitter for Markdown and Code
-text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=1000,
-    chunk overlap=200,
-    separators=["\n\n", "\n", " ", ""]
-)
-
-def generate_embedding(text: str) -> list[float]:
-    response = client.embeddings.create(
-        input=text,
-        model="text-embedding-3-small"
-    )
-    return response.data[0].embedding
-
-def ingest_git_commit(commit_hash: str, commit_message: str, diff_text: str):
-    conn = psycopg2.connect(dsn=os.getenv("DATABASE_URL"))
-    cursor = conn.cursor()
-    
-    # Combine context
-    full_text = f"Commit: {commit_hash}\nMessage: {commit_message}\n\nDiff:\n{diff_text}"
-    chunks = text_splitter.split_text(full_text)
-    
-    for chunk in chunks:
-        vector = generate_embedding(chunk)
-        cursor.execute("""
-            INSERT INTO agent_context (source_type, content, metadata, embedding)
-            VALUES (%s, %s, %s, %s)
-        """, (
-            'git', 
-            chunk, 
-            psycopg2.extras.Json({'commit_hash': commit_hash}), 
-            vector
-        ))
-        
-    conn.commit()
-    cursor.close()
-    conn.close()
-```
-
-## The MCP Tool: TypeScript Implementation
-
-Agents interact with this data via the `discover_space` MCP tool. By encapsulating this inside an MCP server, any agent in BotHuddle—regardless of its underlying LLM framework or prompt configuration—can access the semantic search engine seamlessly.
-
-Our implementation uses Prisma (with raw queries for vector math) and zod for robust input validation.
+Instead of maintaining a persistent vector database, we now hydrate the Orama index on-the-fly. At runtime, we pull the necessary data chunks from DynamoDB and S3, construct the Orama index in-memory, and perform the semantic search. For dynamic updates, we leverage Amazon EventBridge and SQS queues; when new documents are ingested, they trigger lightweight lambda functions that update the relevant cached indexes.
 
 ```typescript
-import { z } from 'zod';
-import { PrismaClient } from '@prisma/client';
-import OpenAI from 'openai';
+// Initializing Orama in-memory with Gemini embeddings
+import { create, insert, search } from '@orama/orama';
+import { pluginEmbeddings } from '@orama/plugin-embeddings';
 
-const prisma = new PrismaClient();
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-// The schema defining the tool's expected arguments
-export const DiscoverSpaceInput = z.object({
-  query: z.string().describe("Natural language description of the context you are looking for."),
-  source_types: z.array(z.enum(['zulip', 'git', 'adr'])).optional().describe("Filter by specific context sources."),
-  limit: z.number().min(1).max(20).default(5),
-  similarity_threshold: z.number().min(0).max(1).default(0.5)
-});
-
-type DiscoverSpaceArgs = z.infer<typeof DiscoverSpaceInput>;
-
-export async function executeDiscoverSpace(args: DiscoverSpaceArgs) {
-  // 1. Generate embedding for the agent's query
-  const embeddingResponse = await openai.embeddings.create({
-    model: "text-embedding-3-small",
-    input: args.query,
-  });
-  
-  const queryVector = embeddingResponse.data[0].embedding;
-  const vectorStr = `[${queryVector.join(',')}]`;
-
-  // 2. Perform hybrid search (Vector Similarity + Metadata Filtering)
-  // We use <=> for Cosine Distance. 
-  // Similarity = 1 - Distance. Therefore, 1 - (embedding <=> query) is the cosine similarity.
-  
-  let sourceFilter = Prisma.sql`1=1`;
-  if (args.source_types && args.source_types.length > 0) {
-      sourceFilter = Prisma.sql`source_type = ANY(${args.source_types})`;
-  }
-
-  const matches = await prisma.$queryRaw`
-    SELECT 
-      id,
-      source_type,
-      content,
-      metadata,
-      1 - (embedding <=> ${vectorStr}::vector) as similarity
-    FROM agent_context
-    WHERE 
-      1 - (embedding <=> ${vectorStr}::vector) > ${args.similarity_threshold}
-      AND ${sourceFilter}
-    ORDER BY embedding <=> ${vectorStr}::vector
-    LIMIT ${args.limit};
-  `;
-
-  // 3. Format and return to the agent
-  return formatMatchesForAgent(matches);
-}
-
-function formatMatchesForAgent(matches: any[]): string {
-    if (matches.length === 0) {
-        return "No relevant semantic context found for your query.";
-    }
-
-    let output = "Found the following historical context:\n\n";
-    for (const match of matches) {
-        output += `--- [Source: ${match.source_type} | Similarity: ${(match.similarity * 100).toFixed(1)}%] ---\n`;
-        if (match.metadata && match.metadata.commit_hash) {
-            output += `Commit Hash: ${match.metadata.commit_hash}\n`;
+const db = await create({
+  schema: { content: 'string', metadata: 'string' },
+  plugins: [
+    pluginEmbeddings({
+      embeddings: {
+        default: {
+          generator: async (text) => await generateGeminiEmbedding(text)
         }
-        output += `${match.content}\n\n`;
-    }
-    return output;
-}
+      }
+    })
+  ]
+});
 ```
 
-### Addressing the Hybrid Search Problem
+This pure-TypeScript approach meant we could finally ditch our Python microservices and unify our codebase. The `discover_space` tool now executes lightning-fast, in-memory similarity searches without the latency of network round-trips to a monolithic database. The entire engine runs smoothly within our existing AWS Amplify and AppSync infrastructure.
 
-One challenge with `pgvector` and HNSW indexes is the interaction between vector search limits and SQL `WHERE` clauses (the "pre-filtering" vs "post-filtering" problem).
+## Overcoming Edge Cases: VRAM and Context Windows
 
-If we run `ORDER BY embedding <=> query LIMIT 5` and then apply a strict `WHERE source_type = 'zulip'`, the database might fetch the 5 closest vectors, realize only 1 of them is from Zulip, and return just 1 result, even though there are other relevant Zulip vectors further down the graph.
+While Orama solved our indexing and retrieval issues, we still faced significant hurdles regarding the actual content we were embedding, particularly when dealing with visual context. 
 
-To solve this, we rely on PostgreSQL's query planner. Because we only have a few source types, Postgres can efficiently scan the index and apply the filter iteratively. However, for highly restrictive metadata filters (e.g., filtering by a specific author and a specific day), we've implemented an iterative fetching mechanism in the application layer: fetching a larger initial pool (e.g., `LIMIT 100`), applying strict application-level filtering, and taking the top $K$ results.
+One of the most complex engineering challenges we encountered was handling massive UI contexts without crashing our local execution environments. Early on, we instructed our agents to ingest raw DOM snapshots and full-page screenshots to build a semantic understanding of the application's visual state. 
 
-## BotHuddle Governance: Preventing Collisions
+This approach proved disastrous during local testing. Processing high-resolution, uncropped screenshots required immense computational power, leading to massive VRAM out-of-memory (OOM) crashes on developer machines and CI runners.
 
-With `discover_space` deployed, we augmented the system prompts of all BotHuddle agents. Before making any mutating action to the filesystem or database schemas, agents are required to execute a semantic search.
+Our initial instinct was to aggressively crop the images or downsample them significantly. However, this caused the agents to lose crucial navigation context—they could no longer see the full layout or understand how different UI elements related to one another spatially.
 
-**Example Scenario:**
-Agent C is tasked with migrating a legacy `User` model.
-1. Agent C queries: `"Recent discussions or commits regarding User model migration and schema changes."`
-2. `discover_space` hits the Postgres database.
-3. It returns a Zulip summary from yesterday where the lead architect mandated that all new User migrations must include a specific `tenant_id` column for the upcoming multi-tenant rollout, alongside a Git commit from Agent A implementing a helper script for this.
-4. Agent C ingests this context, utilizes Agent A's helper script, and adds the `tenant_id` column—completely avoiding a costly mistake and subsequent rewrite.
+To solve this definitively, we implemented a strict HTTP Mutex Queue running on port 8002 specifically designed to manage local LLM workloads and handle `fullPage: true` screenshots safely. 
 
-## Conclusion and Future Work
+Instead of processing everything concurrently, we serialize the requests through the mutex. This ensures that only one heavy multimodal embedding task is processed at any given time. While this introduced a slight delay in processing, it completely eliminated the VRAM OOM crashes and stabilized our local testing environments. The agents retained their full visual context without melting our CI runners. (We cover the specifics of this queue and our broader visual testing strategy in our [Visual Regression with Gemini](/2026-07-09-visual-regression-with-gemini) post).
 
-Using `pgvector` as the backbone of our multi-agent Semantic Discovery Engine has dramatically reduced redundant work and hallucinated context within BotHuddle. By keeping the vector data co-located with our relational data, we sidestepped the immense operational overhead of managing specialized vector databases while still achieving sub-millisecond query latencies using HNSW indexes.
+## The End of BotHuddle and The Future of Antigravity
 
-In the future, we plan to extend `discover_space` with Reciprocal Rank Fusion (RRF) to combine dense vector search with sparse BM25 keyword search, improving recall for exact entity names (like specific UUIDs or class names) where vector similarity occasionally falls short. Until then, our Postgres-backed brain continues to keep our autonomous fleet synchronized, informed, and governed.
+Ultimately, the Semantic Discovery Engine was a resounding technical success. It drastically reduced context collisions, eliminated hallucinated architectures, and saved us thousands of dollars in infrastructure costs.
+
+However, the lessons we learned extending and maintaining the massive, complex BotHuddle architecture eventually led us to a harder realization. The overhead of coordinating dozens of highly autonomous, unpredictable agents was simply too high for the predictable, deterministic workflows required by NeuroHub's healthcare compliance systems.
+
+We ultimately decided to sunset BotHuddle. But the technology we built—the in-memory Orama indexes, the MCP integration, and the visual testing mutexes—didn't go to waste. 
+
+We transitioned these capabilities directly into our new, localized approach: the Antigravity `/teamwork` local commands. By bringing the agents closer to the developer and focusing their scope through explicit, user-directed commands rather than untethered autonomy, we achieved the productivity gains we always wanted, without the chaos.
+
+## Conclusion
+
+Building a Semantic Discovery Engine taught us an invaluable engineering lesson: never adopt an architecture simply because it is the industry's default standard for a given problem space. 
+
+PostgreSQL and `pgvector` are undeniably fantastic tools, but for a serverless, TypeScript-first application running on AWS Amplify, DynamoDB, and Next.js, they represented a fundamentally incompatible and expensive anti-pattern. 
+
+By pivoting to Orama and leaning aggressively into in-memory, edge-friendly technologies, we built a discovery engine that was faster, vastly cheaper, and perfectly aligned with our established tech stack. It proved that sometimes the best way to solve a complex infrastructure problem is to remove the infrastructure entirely.

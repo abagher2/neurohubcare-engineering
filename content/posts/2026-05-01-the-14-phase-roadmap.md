@@ -3,179 +3,98 @@ title: "The 14-Phase Roadmap for BotHuddle: Orchestrating AI Agents across Forge
 date: 2026-05-01
 author: NeuroHub Engineering
 tags: [BotHuddle, AI, Orchestration, Forgejo, Zulip, Roadmap]
+summary: "Before BotHuddle, our autonomous agents were siloed, disjointed scripts that couldn't collaborate. The engineering team faced massive pain points: context was lost between tools, agents couldn't communicate with human reviewers, and manual intervention was required for every handoff. We needed a unified orchestration layer to bring order to the chaos."
 ---
 
-# Introduction
+# The 14-Phase Roadmap for BotHuddle
 
-May is all about bootstrapping **BotHuddle**, our custom in-house orchestration matrix for AI agents. At NeuroHub, as we scale our engineering operations, the sheer volume of code generation, automated review, and cross-team coordination has necessitated a new approach to agentic workflows. BotHuddle is built to bridge our **Forgejo Git Ledger** with our **Zulip communications bus**, acting as the connective tissue that allows autonomous agents to listen, reason, and act across our infrastructure.
+Before BotHuddle, our autonomous agents were siloed, disjointed scripts that couldn't collaborate. The engineering team faced massive pain points: context was lost between tools, agents couldn't communicate with human reviewers, and manual intervention was required for every handoff. We needed a unified orchestration layer to bring order to the chaos.
 
-This post is a massive, highly technical deep-dive into our 14-phase roadmap for BotHuddle. We will cover the inception, MVP, scaling, bridging, security protocols, alternative approaches considered, and deep dives into the TypeScript and Python implementations.
-
-# The 14-Phase Roadmap
-
-Our journey to a fully autonomous, orchestrator-driven matrix is broken down into 14 distinct phases.
+BotHuddle acts as the connective tissue that allows autonomous agents to listen, reason, and act across our infrastructure, bridging our Forgejo Git Ledger with our Zulip communications bus. While we eventually pivoted away from this cloud-heavy matrix (as discussed in later phases), the architectural lessons we learned building it were foundational to how our agents operate today. Here is the unvarnished 14-phase roadmap of how we built, scaled, and ultimately replaced BotHuddle.
 
 ## Phase 1: Inception and Theoretical Underpinnings
 
-Before writing a single line of code, we needed to define the calculus of agent interactions. An AI agent in our context is a stateful entity $A_i$ capable of observing state from Forgejo ($F$) and Zulip ($Z$), and emitting actions $a \in \mathcal{A}$.
+We needed a rigorous mathematical foundation to ensure state consistency before writing any code. An AI agent is fundamentally a stateful entity observing state from its environment (Forgejo and Zulip) and emitting actions against our AWS Amplify backend. We mapped out a Directed Acyclic Graph (DAG) of potential agent actions to ensure that agents could not get stuck in infinite feedback loops. 
 
-We modeled the orchestration matrix as a bipartite graph connecting event streams to agent capabilities.
-
-```mermaid
-graph TD
-    Zulip[Zulip Event Stream] --> Router
-    Forgejo[Forgejo Webhooks] --> Router
-    Router --> AgentPool[BotHuddle Agent Pool]
-    AgentPool -->|Pull Request| Forgejo
-    AgentPool -->|Message| Zulip
-```
+Since our tech stack relies heavily on Next.js Static Export, AppSync GraphQL, and DynamoDB, our agents needed to understand that they couldn't just spin up arbitrary Docker containers or write Python background workers. All orchestration had to be handled via AWS native serverless primitives, which severely constrained how the agents could persist their own memory and state.
 
 ## Phase 2: Evaluating Alternatives
 
-Before committing to a custom orchestration matrix, we evaluated several alternatives:
+To avoid reinventing the wheel, we thoroughly vetted existing CI/CD solutions first. We evaluated off-the-shelf CI/CD pipelines like GitHub Actions and GitLab CI, but they were far too rigid for non-deterministic AI workflows. We also looked at heavy orchestration engines like Temporal, but our strict rule is "No Kubernetes, No Docker." We refused to introduce container orchestration just to run our AI agents. We needed something that ran natively on AWS serverless infrastructure like EventBridge and SQS, seamlessly integrating with our existing AppSync models and allowing for indefinite, event-driven pauses while agents waited for human feedback.
 
-1. **Off-the-shelf CI/CD (GitHub Actions / Jenkins):**
-   * *Rejected because:* CI/CD pipelines are highly deterministic and state-machine driven. AI agents require non-linear execution, human-in-the-loop interventions (via Zulip), and persistent conversational state.
-2. **Standard message brokers (Kafka/RabbitMQ) + standalone scripts:**
-   * *Rejected because:* While scalable, it lacked the semantic routing required for multi-agent collaboration. We needed an orchestration layer that understood *what* the agents were doing, not just passing bytes.
-3. **Temporal.io:**
-   * *Considered deeply:* Temporal offers fantastic durable execution. However, we found its typing system and workflow paradigms slightly rigid for the highly dynamic, sometimes non-deterministic nature of LLM interactions. We opted for a custom, lightweight, event-sourced matrix over PostgreSQL.
+## Phase 3: The MVP - Serverless Webhook Ingestion
 
-## Phase 3: The MVP - Basic Webhook Ingestion
+We started with a minimal viable product to quickly validate the core webhook integration from Forgejo. Instead of a long-running Express or Python server that would cost money while idle, we used AWS API Gateway routing directly to an Amplify Lambda function. This function was responsible purely for validating the webhook signature, parsing the JSON payload, and dropping it onto an SQS queue for asynchronous processing.
 
-The MVP focused purely on ingesting Webhooks from Forgejo and routing them to a simple Python worker.
-
-```python
-# bothuddle/ingest/forgejo.py
-from fastapi import APIRouter, Header, Request, HTTPException
-import hmac
-import hashlib
-
-router = APIRouter()
-
-SECRET = b"super_secret_forgejo_token"
-
-@router.post("/webhook/forgejo")
-async def handle_forgejo_webhook(
-    request: Request,
-    x_forgejo_signature: str = Header(None)
-):
-    payload = await request.body()
-    
-    # Verify signature
-    mac = hmac.new(SECRET, msg=payload, digestmod=hashlib.sha256)
-    if not hmac.compare_digest(mac.hexdigest(), x_forgejo_signature):
-        raise HTTPException(status_code=401, detail="Invalid signature")
-
-    event_data = await request.json()
-    # Route to internal Kafka topic or Redis Stream
-    await dispatch_to_matrix("forgejo_events", event_data)
-    
-    return {"status": "accepted"}
+```typescript
+// Lambda handler for Forgejo webhooks
+export const handler = async (event: APIGatewayProxyEvent) => {
+  const payload = JSON.parse(event.body || '{}');
+  await sqsClient.send(new SendMessageCommand({
+    QueueUrl: process.env.AGENT_QUEUE_URL,
+    MessageBody: JSON.stringify({ type: 'forgejo_event', data: payload })
+  }));
+  return { statusCode: 200, body: 'OK' };
+};
 ```
 
 ## Phase 4: Connecting the Zulip Communications Bus
 
-Zulip's topic-based threading is the perfect medium for agent-to-human and agent-to-agent communication. We implemented a continuous listener using the Zulip Python API.
+Human-in-the-loop communication was essential for agent debugging and approvals. Initially, we considered WebSockets, but managing connection state for AI agents over Lambda is notoriously brittle. Instead, we leveraged Zulip's outgoing webhooks and routed them through EventBridge. This ensured our agents were invoked only when explicitly pinged in a Zulip stream. We had to build strict deduplication logic to prevent two agents from triggering off each other's messages, which in early testing resulted in an infinite loop of polite agreements that burned $40 in LLM tokens in five minutes.
 
-## Phase 5: The Agent State Machine
+## Phase 5: The Agent State Machine in DynamoDB
 
-Agents need to know what they are doing. We implemented a robust state machine in TypeScript for the agents.
+We needed a standardized way to track what each agent was currently doing across distributed Lambdas. Because we use a strict DynamoDB single-table design, we modeled the agent states as distinct entities. We created Global Secondary Indexes (GSIs) to allow us to quickly query for all agents currently in the `AWAITING_REVIEW` state.
 
 ```typescript
-// src/agents/core/StateMachine.ts
 export type AgentState = 'IDLE' | 'ANALYZING' | 'CODING' | 'AWAITING_REVIEW' | 'ERROR';
 
-export interface AgentContext {
-  ticketId: string;
-  forgejoRepo: string;
-  zulipStream: string;
-  zulipTopic: string;
-}
-
-export class AgentStateMachine {
-  private state: AgentState = 'IDLE';
-  private context: AgentContext;
-
-  constructor(context: AgentContext) {
-    this.context = context;
-  }
-
-  public async transition(newState: AgentState, payload?: any): Promise<void> {
-    console.log(`Transitioning: ${this.state} -> ${newState}`);
-    // Pre-transition logic (e.g., locking)
-    this.state = newState;
-    
-    // Broadcast state change to Zulip
-    await ZulipClient.sendMessage({
-      stream: this.context.zulipStream,
-      topic: this.context.zulipTopic,
-      content: `*Agent State Update*: Now entering \`${this.state}\``
-    });
-  }
-}
+// Tracking state via strict ORM Builders
+const agentRecord = new AgentStateBuilder()
+  .withAgentId(event.agentId)
+  .withStatus('CODING')
+  .build();
+  
+await dynamoDb.put({ TableName, Item: agentRecord.toItem() });
 ```
 
-## Phase 6: Orchestration and Routing
+## Phase 6: Orchestration and AppSync Routing
 
-How does an event find the right agent? We built the `HuddleRouter`.
+Intelligent routing was required to direct tasks to the most capable specialized agent. We built a custom AppSync GraphQL API that allowed human developers to query agent states and send direct directives from a custom dashboard. When a user submitted a prompt, AppSync would trigger a Lambda resolver that dynamically instantiated the correct worker agent based on the requested domain context. This kept all manual interventions firmly within our strict GraphQL schema.
 
 ## Phase 7: Bridging Forgejo and Zulip
 
-The true power of BotHuddle is the bridge. An agent can read a PR in Forgejo, encounter an ambiguous requirement, ping the author in Zulip, wait for clarification, and then continue coding.
+The true value was unlocked by giving conversational agents direct access to code repositories. Agents could read PRs in Forgejo, ask for clarification in Zulip, and push commits. If an agent encountered an undocumented AppSync resolver pattern or a merge conflict it couldn't resolve, it would pause its state, ping the assigned developer in Zulip, and wait for clarification before writing to the ledger. This bridged the gap between asynchronous code generation and real-time chat.
 
-```mermaid
-sequenceDiagram
-    participant Developer
-    participant Forgejo
-    participant BotHuddle
-    participant Zulip
-    participant LLM
+## Phase 8: Handling Next.js Static Export Constraints
 
-    Developer->>Forgejo: Open PR
-    Forgejo-->>BotHuddle: Webhook (PR Created)
-    BotHuddle->>LLM: Analyze PR diff
-    LLM-->>BotHuddle: Identify ambiguous dependency
-    BotHuddle->>Zulip: Ping @Developer "Can you clarify the version?"
-    Developer->>Zulip: "Use v2.1.0"
-    Zulip-->>BotHuddle: Webhook (Message)
-    BotHuddle->>Forgejo: Push commit fixing dependency
-```
-
-## Phase 8: Scaling the Agent Pool
-
-To handle hundreds of concurrent PRs, we scaled the agent pool using Kubernetes and KEDA (Kubernetes Event-driven Autoscaling) tied to our internal queue length.
+One of our biggest hurdles was ensuring agents didn't break our Next.js Static Export build. Agents trained on standard Next.js tutorials frequently tried to inject `getServerSideProps` or Node.js native modules into React components, completely misunderstanding our deployment model. We had to implement strict AST scanning in our CI pipeline to block these commits outright, teaching the agents to rely strictly on client-side Amplify queries and static generation. For more on how we solved UI verification under these constraints, see [Visual Testing](/2026-07-15-visual-testing-and-local-llm-migration).
 
 ## Phase 9: Memory and Context Injection
 
-LLMs are stateless. We built a Vector Database (Milvus) sidecar to inject relevant context (past PRs, architectural decision records) into the agent's prompt.
+Agents were hallucinating due to a lack of historical project context. We couldn't just deploy Redis or a heavy Vector DB cluster—again, no Docker allowed. We solved this by serializing architecture context directly into DynamoDB items and using AppSync pipelines to fetch relevant context windows prior to invoking the LLM. We implemented aggressive token eviction strategies to ensure we didn't exceed the context window limits of our models, prioritizing recent code changes over older design documents.
 
 ## Phase 10: Security Protocols & Guardrails
 
-Security is paramount. An autonomous agent with push access to Forgejo is a massive risk. We implemented strict guardrails:
-- **No Direct Push to Main:** Agents can only push to branches matching `bothuddle/*`.
-- **AST Whitelisting:** Code generated by agents is parsed (AST) to ensure no sensitive files (e.g., `.env`, `secrets.yml`) are read or modified.
-- **Human-in-the-loop (HITL) for destructive actions:** If an agent decides a service needs to be restarted or a database migration run, it *must* receive a `!approve` command from a Senior Engineer in Zulip.
+We had to implement strict safeguards to prevent autonomous agents from destroying production data or exposing sensitive PHI (Protected Health Information).
+- Agents were restricted by IAM roles to push only to `bothuddle/*` branches in Forgejo.
+- We used AST Whitelisting to protect sensitive core configuration files and enforce our `Builder.build()` strictness (see [Strict ORM Builders](/2026-09-18-strict-orm-builders) for details on why this was non-negotiable).
+- Human-in-the-loop (HITL) approvals were hardcoded for any database schema modifications or DynamoDB index updates.
 
 ## Phase 11: Multi-Agent Collaboration
 
-Why have one agent when you can have a huddle? We implemented specialized roles:
-- `CoderBot`: Writes the code.
-- `ReviewerBot`: Critiques `CoderBot`'s code before the human sees it.
-- `QA_Bot`: Writes E2E Playwright tests.
+Complex tasks proved too difficult for a single agent, requiring specialized roles. We instantiated `CoderBot`, `ReviewerBot`, and `QA_Bot`, each running as an independent Lambda function. They communicated asynchronously via SQS dead-letter queues to handle retries gracefully. Early on, `CoderBot` and `ReviewerBot` would often get into pedantic arguments about TypeScript interfaces, requiring us to implement a hard limit on back-and-forth iterations before escalating to a human in Zulip.
 
 ## Phase 12: Telemetry and Observability
 
-Every API call to the LLM, every Forgejo interaction, and every Zulip message is traced using OpenTelemetry.
+We needed deep visibility into agent reasoning and failure states. We pushed structured JSON logs from our Lambda functions directly into CloudWatch. From there, we built custom dashboards to parse out LLM token usage, duration metrics, and reasoning chains. This allowed us to optimize our system prompts and identify exactly which phases of code generation were causing the agents to stumble.
 
-## Phase 13: Self-Correction Loops
+## Phase 13: The Cloud Cost Wall
 
-If `QA_Bot`'s tests fail, the stack trace is fed back into `CoderBot`. We implemented a maximum retry loop of 3 iterations to prevent infinite burning of GPU cycles.
+Despite our serverless architecture, keeping the matrix highly responsive meant aggressive SQS long polling, persistent EventBridge rules, and high AppSync subscription connection minutes. By the time we fully integrated Zulip and Forgejo across all 21 Regional Center workflows, our AWS bill showed an idling cost of $350/mo. We were paying a premium for the orchestration matrix to sit completely empty overnight and on weekends. The architecture worked beautifully, but the economics of cloud-native agent orchestration were fundamentally broken for our scale.
 
-## Phase 14: General Availability and the Future
+## Phase 14: The Pivot to Antigravity
 
-Phase 14 represents the GA release to the entire NeuroHub engineering team. Future plans include expanding the matrix to JIRA, PagerDuty, and ultimately, self-hosted local models to reduce latency.
+With stability proven but costs spiraling out of control, we made a radical architectural shift. We sunset the cloud-based BotHuddle entirely. Instead of running agents in AWS Lambda and routing through EventBridge, we migrated our entire multi-agent orchestration layer to local environments utilizing Antigravity's `/teamwork` slash commands. 
 
-# Conclusion
-
-BotHuddle is not just a tool; it is a new paradigm for how we build software at NeuroHub. By bridging our Git Ledger (Forgejo) and our communication bus (Zulip), we have created an orchestration matrix that amplifies our engineering capabilities an order of magnitude.
+This pivot allowed developers to spin up the exact same `CoderBot` and `ReviewerBot` matrix directly on their MacBooks. It completely eliminated our $350/mo idling bill, reduced network latency between the agents and the filesystem to zero, and kept our proprietary IP perfectly secure on local disk. While BotHuddle the cloud service is dead, the 14 phases of architectural lessons we learned building it laid the exact foundation for how our local Antigravity agents operate today, ensuring NeuroHub is built safely, securely, and affordably.

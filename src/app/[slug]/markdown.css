@@ -71,3 +71,35 @@
   font-style: italic;
   margin-bottom: 1.5rem;
 }
+
+/* Markdown Table Styles */
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5rem;
+  margin-bottom: 2rem;
+  font-size: 0.95rem;
+  border: 1px solid var(--surface-border, #e2e8f0);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.markdown-body th, .markdown-body td {
+  border: 1px solid var(--surface-border, #e2e8f0);
+  padding: 0.75rem 1rem;
+  text-align: left;
+}
+
+.markdown-body th {
+  background-color: var(--slate-100, #f1f5f9);
+  color: var(--slate-900, #0f172a);
+  font-weight: 700;
+}
+
+.markdown-body tr:nth-child(even) {
+  background-color: var(--slate-50, #f8fafc);
+}
+
+.markdown-body tr:hover {
+  background-color: var(--slate-100, #f1f5f9);
+}

@@ -1,281 +1,83 @@
 ---
-title: "The Auto-Generated MCP Layer: Bootstrapping BotHuddle"
+title: "Auto-Generating Model Context Protocol (MCP) Surfaces from Live Schemas"
 date: "2026-05-15"
 author: "NeuroHub Engineering"
 tags: ["AI", "BotHuddle", "MCP", "Code Generation", "Forgejo", "Zulip", "Architecture"]
+summary: "The Motivation: As we scaled BotHuddle, our agents were spending way too much context-window memory trying to understand the API surfaces of our internal tools. We needed a way to auto-generate the Model Context Protocol (MCP) layer so the agents could instantly discover and call functions without hallucinating endpoints."
 ---
 
-# The Auto-Generated MCP Layer: Bootstrapping BotHuddle
+# Auto-Generating Model Context Protocol (MCP) Surfaces from Live Schemas
 
-May has been a pivotal month here at NeuroHub Engineering as we focus on bootstrapping **BotHuddle**, our custom in-house orchestration matrix for AI agents. Designed to bridge our Forgejo Git Ledger with our Zulip communications bus, BotHuddle represents a significant leap in how we manage, deploy, and interact with autonomous agents. A cornerstone of this architecture is our auto-generated Model Context Protocol (MCP) layer.
+> **The Motivation:** As we scaled BotHuddle, our agents were spending way too much context-window memory trying to understand the API surfaces of our internal tools. We needed a way to auto-generate the Model Context Protocol (MCP) layer so the agents could instantly discover and call functions without hallucinating endpoints.
 
-In this massive deep dive, we will explore the theoretical underpinnings, architectural design, and deep technical implementation of how we auto-generate types, interfaces, and server stubs for our MCP layer directly from our central schema registry. We will also look at the alternative approaches we evaluated and ultimately rejected.
+When we introduced the Unified Domain API, we successfully solved the problem of *where* our autonomous agents should send their requests, establishing a robust AWS AppSync GraphQL boundary. However, we still faced a massive, arguably more difficult hurdle: *how* the agents knew exactly what payloads to send. In the early, experimental days of BotHuddle, we relied on manual, prose-heavy prompt engineering. We wrote exhaustive prompts detailing every single available tool, meticulously outlining its required parameters, optional fields, and expected JSON output structures. 
 
-## 1. Introduction to BotHuddle and the MCP
+This manual approach was disastrous for two reasons. First, it consumed a massive portion of the LLM context window. Before an agent even began reasoning about a complex code issue or a user request, thousands of tokens were already burned just explaining the API contracts of Forgejo and Zulip. Second, despite these lengthy descriptions, agents frequently hallucinated. They would invent non-existent parameters, confidently mix up the API contracts of different services, or use deprecated fields, resulting in continuous execution failures.
 
-BotHuddle isn't just a simple bot framework. It is an orchestration matrix designed for complex multi-agent interactions. Agents in BotHuddle need to:
-1. Observe repository states and events from Forgejo.
-2. Communicate with human operators and other agents via Zulip.
-3. Access internal NeuroHub APIs securely.
-4. Execute complex toolchains.
+To definitively solve this, BotHuddle adopted the Model Context Protocol (MCP) as the standardized interface for agent tooling. MCP provided a structured, discoverable way for models to understand capabilities. However, writing and maintaining these MCP servers by hand for every new Forgejo Git operation or Zulip chat capability quickly became a tedious, error-prone chore that slowed feature development to a crawl. To scale, we realized we needed to build a comprehensive automated pipeline to generate types, interfaces, and server stubs from a single, undeniable source of truth: `HuddleSchema`.
 
-To achieve this, we adopted the **Model Context Protocol (MCP)** as the standard interface for our agents. MCP provides a robust, standardized way for AI models to discover and invoke tools, access resources, and read prompts. However, manually implementing MCP servers for every new capability is error-prone and scales poorly. 
+## HuddleSchema as the Source of Truth
 
-Our solution? An auto-generated MCP layer that derives its entire surface area—types, schemas, validation logic, and transport bindings—from a single source of truth.
+`HuddleSchema` was born out of necessity. It was our internal DSL (Domain Specific Language) defined in YAML, capturing every tool, resource, and prompt available within the agent matrix. Instead of maintaining disjointed documentation and separate code implementations, `HuddleSchema` became the canonical definition of what an agent could do.
 
-## 2. Architectural Overview
+By utilizing AWS Amplify Gen 2, we mapped this schema directly to our backend infrastructure. The definitions in `HuddleSchema` dictated the AppSync GraphQL schemas and the corresponding DynamoDB table structures. This ensured that the AI's semantic understanding of its capabilities perfectly matched the physical reality of our AWS infrastructure. 
 
-At a high level, the BotHuddle architecture revolves around a central **Schema Registry** written in a superset of JSON Schema and OpenAPI (which we internally call `HuddleSchema`). The code generator takes this schema and produces both Python (for our heavy AI logic) and TypeScript (for our edge workers and UI interfaces) MCP SDKs.
+Our custom `huddle-gen` compiler was the engine driving this system. It parsed the `HuddleSchema` definitions and automatically emitted type-safe TypeScript bindings for our Next.js backend. This generation step removed human error from the equation entirely. When a developer wanted to add a new capability for an agent, they updated the YAML schema, and the CI/CD pipeline generated the rest.
 
-```mermaid
-graph TD
-    subgraph "Design Time"
-        A[HuddleSchema Definition] --> B[BotHuddle Code Generator]
-        B --> C[TypeScript MCP SDK]
-        B --> D[Python MCP SDK]
-    end
+## Enforcing Strictness with the Builder Pattern
 
-    subgraph "Runtime (BotHuddle Matrix)"
-        E[Agent Core] --> F[Python MCP Client]
-        G[Forgejo Connector] --> H[TypeScript MCP Server]
-        I[Zulip Connector] --> J[Python MCP Server]
-        F <-->|JSON-RPC over stdio/HTTP| H
-        F <-->|JSON-RPC over stdio/HTTP| J
-    end
-```
-
-### 2.1 The HuddleSchema
-
-`HuddleSchema` acts as the single source of truth. It defines the tools, resources, and prompts available within the BotHuddle matrix.
-
-```yaml
-# example-schema.yaml
-version: "1.0"
-namespace: "forgejo"
-tools:
-  - name: "create_pull_request"
-    description: "Creates a pull request in the Forgejo Git Ledger."
-    parameters:
-      type: object
-      properties:
-        repository:
-          type: string
-          description: "The full repository name (e.g., neurohub/core)"
-        head_branch:
-          type: string
-        base_branch:
-          type: string
-        title:
-          type: string
-      required: [repository, head_branch, base_branch, title]
-resources:
-  - uri_template: "forgejo://{repository}/pulls/{pr_id}"
-    name: "Pull Request Details"
-    mime_type: "application/json"
-```
-
-## 3. Deep Dive: Code Generation
-
-The core of our auto-generated layer is the `huddle-gen` compiler. Written in Rust for performance, it parses `HuddleSchema` files and emits highly optimized, type-safe bindings for both Python and TypeScript.
-
-### 3.1 Generating TypeScript Interfaces
-
-When `huddle-gen` encounters the `create_pull_request` tool, it generates the following TypeScript artifacts using the `@modelcontextprotocol/sdk`.
-
-#### The Types
-First, it generates Zod schemas and corresponding TypeScript interfaces for runtime validation.
+A critical, non-negotiable requirement of this generated MCP layer was ensuring that the data returned by the agents was immediately and aggressively validated. We couldn't trust the raw JSON emitted by the LLM. Therefore, `huddle-gen` generated TypeScript interfaces that forced our application logic to use our established `Builder.build()` pattern before saving anything to DynamoDB or executing a critical mutation.
 
 ```typescript
-// generated/forgejo/types.ts
-import { z } from "zod";
-
-export const CreatePullRequestArgsSchema = z.object({
-  repository: z.string().describe("The full repository name (e.g., neurohub/core)"),
-  head_branch: z.string(),
-  base_branch: z.string(),
-  title: z.string(),
+// Auto-generated from HuddleSchema by the huddle-gen compiler
+export const CreatePullRequestArgsSchema = z.object({ 
+  repository: z.string().min(1), 
+  branch: z.string().min(1),
+  title: z.string().max(255)
 });
-
 export type CreatePullRequestArgs = z.infer<typeof CreatePullRequestArgsSchema>;
-```
-
-#### The Server Stub
-Next, it generates an abstract server class. Developers only need to extend this class and implement the abstract methods, completely ignoring the underlying JSON-RPC transport and schema validation.
-
-```typescript
-// generated/forgejo/server.ts
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
-import { CreatePullRequestArgsSchema, CreatePullRequestArgs } from "./types.js";
 
 export abstract class ForgejoMcpServerBase {
-  protected server: Server;
-
-  constructor(serverName: string = "forgejo-mcp", serverVersion: string = "1.0.0") {
-    this.server = new Server({ name: serverName, version: serverVersion }, { capabilities: { tools: {} } });
-    this.setupHandlers();
-  }
-
-  protected abstract handleCreatePullRequest(args: CreatePullRequestArgs): Promise<any>;
-
-  private setupHandlers() {
-    this.server.setRequestHandler(ListToolsRequestSchema, async () => {
-      return {
-        tools: [
-          {
-            name: "create_pull_request",
-            description: "Creates a pull request in the Forgejo Git Ledger.",
-            inputSchema: {
-              type: "object",
-              properties: {
-                repository: { type: "string", description: "The full repository name (e.g., neurohub/core)" },
-                head_branch: { type: "string" },
-                base_branch: { type: "string" },
-                title: { type: "string" }
-              },
-              required: ["repository", "head_branch", "base_branch", "title"]
-            }
-          }
-        ]
-      };
-    });
-
-    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
-      if (request.params.name === "create_pull_request") {
-        const args = CreatePullRequestArgsSchema.parse(request.params.arguments);
-        const result = await this.handleCreatePullRequest(args);
-        return { content: [{ type: "text", text: JSON.stringify(result) }] };
-      }
-      throw new Error(`Unknown tool: ${request.params.name}`);
-    });
-  }
-  
-  public getServer(): Server {
-    return this.server;
-  }
+  // Developer implementations MUST return a validated Builder instance.
+  // Raw JSON or loose objects will cause a compile-time error.
+  protected abstract handleCreatePullRequest(args: CreatePullRequestArgs): Promise<PullRequestBuilder>;
 }
 ```
 
-This drastically reduces boilerplate. A developer implementing the Forgejo connector simply writes:
+By explicitly coupling MCP tool execution directly with strict Builders, we created an impermeable boundary. We guaranteed that no agent could ever pollute our DynamoDB tables with malformed state. If the LLM hallucinated an invalid `repository` string format, the Zod validation layer generated from the schema would catch it immediately. If the parameters passed validation but violated deeper business logic, the `Builder.build()` step would throw an invariant error. If you want to dive deeper into how we enforce these invariants and prevent data corruption across our entire stack, read our detailed guide on [Strict ORM Builders](/2026-09-18-strict-orm-builders).
+
+## Tool Routing and the EventBridge Pipeline
+
+Once the MCP layer was generated and strictly typed, we needed a robust execution environment. Agents queried the BotHuddle Matrix router to discover available tools. When an agent decided to execute a tool (for example, `create_pull_request`), the request was routed securely through our AWS AppSync API.
+
+However, many agent tasks are inherently slow. Generating a large diff, analyzing a test suite, or querying historical Git logs can take tens of seconds—far exceeding standard API timeout thresholds. To handle these long-running tasks without blocking the AppSync request lifecycle and causing timeouts, we decoupled the execution using AWS EventBridge and Amazon SQS. 
+
+When an agent invoked a tool, the MCP server immediately returned an `acknowledgement` response. Simultaneously, it published an event to EventBridge, which routed the actual heavy lifting to a background Next.js worker processing the SQS queue.
 
 ```typescript
-import { ForgejoMcpServerBase } from "./generated/forgejo/server.js";
-import { CreatePullRequestArgs } from "./generated/forgejo/types.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-
-class ForgejoMcpServer extends ForgejoMcpServerBase {
-  protected async handleCreatePullRequest(args: CreatePullRequestArgs) {
-    // Actual business logic hitting the Forgejo API
-    console.error(`Creating PR for ${args.repository}`);
-    return { status: "success", pr_url: `https://git.neurohub.com/${args.repository}/pulls/123` };
-  }
-}
-
-async function main() {
-  const server = new ForgejoMcpServer();
-  const transport = new StdioServerTransport();
-  await server.getServer().connect(transport);
-}
-main();
+// Enqueueing an agent's tool call for asynchronous background execution
+await eventBridgeClient.putEvents({
+  Entries: [{
+    Source: 'mcp.tool.execution',
+    DetailType: 'CreatePullRequest',
+    Detail: JSON.stringify(validatedArgs),
+    EventBusName: 'BotHuddleExecutionBus'
+  }]
+});
 ```
 
-### 3.2 Generating Python Client Bindings
+This decoupled, event-driven architecture prevented brittle timeout issues when agents interacted with slow external systems. It allowed the BotHuddle matrix to remain highly responsive, ensuring that agents weren't left hanging waiting for an HTTP request that had long since died.
 
-On the agent side (typically Python), we need a seamless way to invoke these tools. Our generator leverages Pydantic for validation and the `mcp` Python SDK.
+## Operational Overhead and the Pivot
 
-```python
-# generated/forgejo/client.py
-from pydantic import BaseModel, Field
-from typing import Dict, Any
-from mcp import ClientSession
+The Auto-Generated MCP Layer was, by all accounts, a massive technical triumph for our team. It drastically reduced context window usage, eliminated API hallucinations, and allowed us to rapidly add new capabilities to our agents simply by editing a YAML file. However, the operational reality of running this highly decoupled, event-driven architecture 24/7 quickly became an untenable burden.
 
-class CreatePullRequestArgs(BaseModel):
-    repository: str = Field(..., description="The full repository name (e.g., neurohub/core)")
-    head_branch: str
-    base_branch: str
-    title: str
+Maintaining the infrastructure for this continuous matrix proved exhausting. We were processing a constant, low-level stream of SQS messages, running complex EventBridge rules just to handle agent heartbeats and presence updates, and paying for idle DynamoDB capacity to track the state of agents that were mostly doing nothing. 
 
-class ForgejoMcpClient:
-    def __init__(self, session: ClientSession):
-        self.session = session
+This idle state cost us $350/mo. While that might not sound astronomical for an enterprise, it represented pure waste. We were paying for the *potential* of agent action, rather than actual compute time used to solve problems. The overhead of a persistent, always-on multi-agent cloud environment was fundamentally misaligned with the bursty, episodic nature of how we actually wanted to use AI agents.
 
-    async def create_pull_request(self, args: CreatePullRequestArgs) -> Dict[str, Any]:
-        """Creates a pull request in the Forgejo Git Ledger."""
-        result = await self.session.call_tool(
-            "create_pull_request", 
-            arguments=args.model_dump()
-        )
-        return result.content
-```
+Ultimately, we made the painful but necessary decision to kill BotHuddle. We realized that agents didn't need a persistent, expensive cloud matrix to be effective; they needed highly contextual, on-demand execution environments. We completely pivoted away from cloud-hosted matrices to Antigravity's local `/teamwork` slash commands. 
 
-## 4. Resource and Prompt Generation
+This shift gave us the same powerful, multi-agent collaborative capabilities, but executed entirely locally on the developer's machine. It was ephemeral, incredibly fast, and most importantly, carried zero cloud idling costs. This profound transition to local-first execution also unlocked entirely new workflows for us, which we explored deeply in our transition to [Visual Testing](/2026-07-15-visual-testing-and-local-llm-migration) and local LLM execution. 
 
-Tools are just one part of MCP. Our generator also handles `resources` and `prompts`.
-
-### Resource Templates
-Resources in MCP often use URI templates (e.g., `forgejo://{repository}/pulls/{pr_id}`). `huddle-gen` parses these templates and generates strongly typed resource resolvers.
-
-```typescript
-// Generated Resource Resolver Stub
-export abstract class ResourceResolverBase {
-  // Enforces that developers extract the correct path parameters
-  protected abstract resolvePullRequestDetails(repository: string, pr_id: string): Promise<string>;
-  
-  // ... generated routing logic ...
-}
-```
-
-### Strongly Typed Prompts
-Prompts define the structural context we feed to LLMs. By defining them in `HuddleSchema`, we guarantee that an agent has the exact right arguments to instantiate a prompt before it makes an LLM request.
-
-## 5. Alternative Approaches Considered and Rejected
-
-Building `huddle-gen` was a significant investment. Before committing, we evaluated several alternatives:
-
-### 5.1 Rejected: Pure OpenAPI/Swagger Generation
-*Why we considered it:* OpenAPI is the industry standard for REST.
-*Why we rejected it:* OpenAPI is hyper-focused on HTTP semantics (status codes, headers, methods). MCP operates over abstract transports (stdio, SSE) and relies on JSON-RPC. Mapping OpenAPI paths to MCP Tools felt forced and resulted in brittle code. Furthermore, OpenAPI has no native concept of MCP `prompts` or `resources` (in the MCP URI sense).
-
-### 5.2 Rejected: Dynamic Runtime Reflection (e.g., Python `inspect`)
-*Why we considered it:* We could just write Python functions, inspect their signatures at runtime, and automatically expose them as MCP tools (similar to FastAPI).
-*Why we rejected it:* While this works great for a single language, BotHuddle is polyglot. We have Forgejo connectors in Go/TypeScript, Zulip bots in Python, and internal microservices in Rust. Runtime reflection doesn't give us a language-agnostic contract. We needed a schema-first approach to ensure a Python agent could safely call a TypeScript tool with guaranteed type safety.
-
-### 5.3 Rejected: GraphQL
-*Why we considered it:* GraphQL provides excellent schema definitions and introspection.
-*Why we rejected it:* GraphQL implies a query language and a specific resolution execution model. MCP is simpler: it's just RPC for tools and simple URI fetching for resources, optimized for LLM consumption. Wrapping MCP in GraphQL would add unnecessary parsing overhead for the LLMs.
-
-## 6. Theoretical Concepts: The Orchestration Matrix
-
-BotHuddle is described as an "orchestration matrix." What does that mean in the context of our generated MCP layer?
-
-In traditional microservices, services communicate point-to-point or via an event bus. In BotHuddle, the "Matrix" is a dynamic graph of MCP connections. 
-
-When an agent wakes up (perhaps triggered by a Zulip message mentioning a Forgejo PR), it doesn't know *a priori* where the `create_pull_request` tool lives. It queries the BotHuddle Matrix router, which uses the same generated `HuddleSchema` metadata to perform **Tool Routing**.
-
-```mermaid
-sequenceDiagram
-    participant Agent as Agent (Python)
-    participant Matrix as BotHuddle Matrix Router
-    participant Forgejo as Forgejo Server (TypeScript)
-    
-    Agent->>Matrix: ListTools()
-    Matrix-->>Agent: Returns [create_pull_request, ...]
-    
-    Agent->>Matrix: CallTool("create_pull_request", {repo: "..."})
-    
-    Note over Matrix: Inspects request, matches to Forgejo Node
-    
-    Matrix->>Forgejo: CallTool("create_pull_request", {repo: "..."})
-    Forgejo-->>Matrix: Success
-    Matrix-->>Agent: Success
-```
-
-Because every node in this sequence is running code generated from the exact same schema, we guarantee complete RPC fidelity across the matrix, regardless of the underlying language or transport layer.
-
-## 7. Conclusion
-
-Bootstrapping BotHuddle with an auto-generated MCP layer has fundamentally changed our development velocity. We no longer write boilerplate JSON-RPC servers or manual validation logic. We define our capabilities in `HuddleSchema`, run `huddle-gen`, and immediately start writing business logic.
-
-As we continue to expand BotHuddle throughout May, integrating more deeply with Forgejo and Zulip, this strong type foundation will ensure our agents operate safely, predictably, and efficiently within the NeuroHub ecosystem.
-
-Stay tuned for our next post where we'll dive into how we handle secure context isolation within BotHuddle!
+While the BotHuddle cloud matrix has been retired, the core principles of auto-generated tooling, strict schemas, and event-driven decoupling remain central to how we architect systems at NeuroHub today.

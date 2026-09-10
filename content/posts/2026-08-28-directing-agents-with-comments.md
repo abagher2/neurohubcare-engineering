@@ -4,98 +4,83 @@ date: "2026-08-28"
 author: "NeuroHub Engineering"
 description: "How we stopped our AI coding agents from over-engineering our codebase by implementing strict, inline @AGENT_DIRECTIVE comments, turning the codebase itself into a dynamic prompt."
 tags: ["AI", "LLMs", "Developer Experience", "Code Architecture", "Prompt Engineering"]
+summary: "We discovered that our AI coding agents were frequently ignoring our global system prompts, especially when working deep within complex files. They would eagerly reinvent patterns or violate architectural boundaries because the global instructions were pushed out of their immediate context window. This resulted in a growing mountain of technical debt and endless refactoring cycles just to undo the AI's 'help.'"
 ---
-
 # Taming the Machine: Directing Autonomous Agents with Inline Comments
 
-As NeuroHub's engineering team integrated autonomous AI coding agents (like Antigravity and various LLM-powered IDE extensions) into our daily workflows, we encountered a fascinating new class of technical debt: **AI Over-Engineering**. 
+We discovered that our AI coding agents were frequently ignoring our global system prompts, especially when working deep within complex files. They would eagerly reinvent patterns or violate architectural boundaries because the global instructions were pushed out of their immediate context window. This resulted in a growing mountain of technical debt and endless refactoring cycles just to undo the AI's "help."
 
-An agent tasked with "adding a retry mechanism to the S3 upload utility" wouldn't just add a simple `for` loop. Left to its own devices, it would often import a massive resilience library, define abstract base classes for backoff strategies, and wrap the entire module in complex Generics. The AI was trying to be *too* helpful, applying enterprise design patterns to functional utility scripts.
+As NeuroHub's engineering team integrated autonomous AI coding agents deeply into our daily workflow using our Antigravity framework, we encountered a fascinating and entirely new class of technical debt: **AI Over-Engineering**. We needed a way to constrain the AI's boundless creativity without stripping away its autonomy or forcing human reviewers to constantly play "bad cop" on Pull Requests. Our solution was to embed instructions directly into the codebase using `@AGENT_DIRECTIVE`, effectively turning the source code itself into a highly contextual, dynamic prompt.
 
-We needed a way to constrain the AI's creativity without stripping away its autonomy. Our solution was to embed instructions directly into the codebase using a standard we developed called `@AGENT_DIRECTIVE`.
+## The Limits of Global System Prompts
+
+When we first deployed our agentic workforce, we relied heavily on macroscopic instructions. We created a massive `AGENTS.md` file at the root of our Next.js monorepo that detailed every architectural rule, naming convention, and AWS AppSync integration pattern. (You can read more about this overarching philosophy in [Code Documentation as System Prompt](/2026-09-04-code-documentation-as-system-prompt)).
+
+In theory, this was perfect. In practice, it broke down when the agents actually got to work. 
+
+Large Language Models (LLMs) suffer from context decay. When an agent is tasked with adding a new field to a 500-line React component deep inside `src/app/requests/reimbursements/_components/`, the `AGENTS.md` file is sitting at the very beginning of its context window. By the time the LLM starts generating code to modify the specific AppSync mutation, the global rule that says "Never import AWS SDKs directly into UI components" has been overshadowed by the immediate context of the React file. The agent, trying to be "helpful," would often hallucinate a direct DynamoDB call right in the middle of a Next.js Client Component.
+
+This led to frustrating cycles. The agent would write code, the CI pipeline would catch the architectural violation, the agent would try to fix it, and it would often just hallucinate a different, equally wrong solution. 
 
 ## The Concept: Code as Prompt
 
-AI agents read the files they are editing. Therefore, the most effective place to put instructions for an AI is adjacent to the code itself, not in a distant `CONTRIBUTING.md` file or an external Wiki.
+To guarantee the AI always had the most relevant rules at the exact moment of generation, we moved the instructions into the code itself. 
 
-By defining a formal syntax for inline directives, we turn our source code into a dynamic, context-aware prompt that guides the AI's decision-making process at the exact moment of execution.
+AI agents fundamentally read the files they are editing. When an agent opens `ReimbursementWizard.tsx`, the contents of that specific file are the most salient tokens in its context window. By defining a formal syntax for inline directives, we force compliance precisely at the line of invocation. This is the microscopic counterpart to our macroscopic `AGENTS.md` file.
 
-### The Syntax of an `@AGENT_DIRECTIVE`
+We settled on a strict syntax: `// @AGENT_DIRECTIVE: [Rule Name]`. When our Antigravity orchestration layer parses the workspace, it specifically highlights these comments in the payload it sends to the LLM, giving them artificially high attention weights.
 
-We standardized the format so that both human reviewers and AI parsers could easily identify and adhere to the rules.
+## Real-World Examples of Taming the Machine
 
-```typescript
-// @AGENT_DIRECTIVE: [Rule Name]
-// DO: [Explicit action or pattern to follow]
-// DO_NOT: [Explicit anti-pattern to avoid]
-// CONTEXT: [Brief explanation of why this rule exists]
-```
-
-## Real-World Examples in the NeuroHub Codebase
+Here is how we applied these directives to solve our most common AI-generated anti-patterns, specifically interacting with our AWS AppSync and DynamoDB backends.
 
 ### 1. Stopping the UI Catchall Menace
 
-Early on, agents loved creating generic UI components and dumping them into `src/components`. We explicitly forbid this in our rules, but global rules are sometimes forgotten during long context windows. Inline directives act as localized guardrails.
+In Next.js App Router, we enforce a strict route-based component architecture. We want components that belong to a specific route to live in that route's private `_components` folder, not in a generic, global `src/components/ui` folder. Agents naturally want to abstract everything into a global UI library because that's what their training data (mostly older React codebases) taught them to do.
+
+Global rules are sometimes forgotten during long context windows. Inline directives act as localized guardrails, screaming at the agent right when it is deciding where to place a new file.
 
 ```tsx
-// src/app/care-plan/_components/GoalTracker.tsx
-
 // @AGENT_DIRECTIVE: Route-first Component Placement
-// DO: Keep all child components related to Goal Tracking in this directory (`_components`).
-// DO_NOT: Extract internal sub-components (like GoalProgressBar) to `src/components` unless they are explicitly requested by another route family.
-// CONTEXT: We prefer shallow, route-private packages to prevent generic capability catchalls.
-
-export const GoalTracker = ({ goals }: GoalTrackerProps) => { ... }
+// DO: Keep child components in this directory (`_components`).
+// DO_NOT: Extract to `src/components`.
+// RATIONALE: This component relies on specific AppSync queries unique to this route.
+export const GoalTracker = () => { /* ... */ }
 ```
 
 ### 2. Enforcing the Builder Pattern
 
-As discussed in previous posts, we require the Builder pattern for complex entities. Agents often try to bypass this by instantiating classes directly with large JSON payloads.
+One of the most dangerous hallucinations occurred around data instantiation. When fetching complex payloads from DynamoDB via AppSync, agents repeatedly tried to bypass our validation layers by directly casting JSON with `as PatientRecord` or directly instantiating raw objects. 
+
+As detailed in our post on [Strict ORM Builders](/2026-09-18-strict-orm-builders), this hallucination is fatal to data integrity in healthcare. If an agent hallucinates a field, it silently poisons the domain logic.
+
+We placed directives directly on the class definitions to stop this behavior at the source.
 
 ```typescript
-// src/lib/orm/entities/Workflow.ts
-
 // @AGENT_DIRECTIVE: Entity Construction
-// DO: Use `WorkflowBuilder.build()` to create new instances of this class.
-// DO_NOT: Instantiate `new Workflow()` directly in API routes, React components, or event handlers.
-// CONTEXT: Central ORM hydration must schema-decode into a Builder to guarantee domain integrity.
-
-export class Workflow {
-  // ... private constructor ...
-}
+// DO: Use `WorkflowBuilder.build()` to parse AppSync GraphQL payloads.
+// DO_NOT: Instantiate `new Workflow()` directly or cast raw JSON.
+// RATIONALE: Builder enforces Zod schema validation and prevents terminology leakage.
+export class Workflow { /* ... */ }
 ```
+
+Whenever an agent tried to read the `Workflow` class to understand how to use it, the very first thing it read was the directive telling it exactly what *not* to do. The success rate of agents using the Builder pattern skyrocketed from 40% to 99%.
 
 ### 3. Restricting Direct SDK Usage
 
-A common issue was agents importing AWS or Google GenAI SDKs directly into UI components or random utility files, bypassing our centralized adapters.
+We had a persistent issue with agents trying to be "efficient" by importing cloud SDKs or third-party libraries directly into front-end components. Instead of using our carefully crafted AppSync GraphQL hooks, an agent would try to import `@aws-sdk/client-dynamodb` directly into a Next.js Client Component, instantly breaking the build.
 
 ```typescript
-// src/lib/ai/ai-core.ts
-
 // @AGENT_DIRECTIVE: AI Integration Centralization
-// DO: Route all AI model inferences and document parsing through the functions exported here.
-// DO_NOT: Import `@google/genai` or `@aws-sdk/client-bedrock` anywhere else in the application.
-// CONTEXT: We must maintain a single choke point for telemetry, token counting, and safety enforcement.
+// DO: Route all data fetching through generated AppSync hooks (e.g. `useGetPatientQuery`).
+// DO_NOT: Import AWS SDKs directly into UI components.
+export function useAIAnalysis() { /* ... */ }
 ```
 
-## How It Works Under the Hood
+## The Human Impact: Better Developer Experience
 
-Why does this work so well? Modern Large Language Models (LLMs) used for coding (like GPT-4, Claude 3.5 Sonnet, or Gemini 1.5 Pro) operate with a sophisticated attention mechanism. 
+Implementing `@AGENT_DIRECTIVE` profoundly changed the human developer experience at NeuroHub. Before this, senior engineers felt like they were constantly babysitting junior developers who refused to learn. PR reviews were exhausting, filled with the same repetitive comments: "Use the builder", "Move this to the local folder", "Don't use raw fetch".
 
-When the agent loads `Workflow.ts` into its context window to make a modification, the `@AGENT_DIRECTIVE` comment is immediately placed into the model's active memory, spatially adjacent to the code it needs to modify. The explicit `DO_NOT` keyword creates a strong negative constraint in the model's token prediction probabilities, drastically reducing the chance it will generate the forbidden pattern.
+By embedding the knowledge directly into the codebase, we created a self-documenting system that trains the AI agents autonomously. When an agent violates a rule now, the engineer simply adds a new `@AGENT_DIRECTIVE` to the file, and the agent never makes that mistake again. The codebase itself has become a living, breathing teacher.
 
-## Alternative Approaches Considered
-
-### System Prompt Bloat
-Initially, we tried putting all these rules into the agent's global system prompt (e.g., `AGENTS.md`). 
-*Why it failed:* The global prompt became thousands of lines long. The model suffered from "lost in the middle" syndrome, forgetting specific rules about the `Workflow` class while editing a file 20 steps deep into a task.
-
-### Post-Generation Linting
-We considered writing custom ESLint rules to catch AI mistakes *after* they were generated.
-*Why it failed:* Writing AST-based lint rules for high-level architectural concepts (like "Don't over-engineer this utility") is nearly impossible. Furthermore, it creates a frustrating developer experience where the AI writes code, the linter rejects it, and the AI spends 5 loops trying to fix it. Preventing the bad code at the point of generation is much more efficient.
-
-## Conclusion
-
-The transition to AI-assisted engineering requires a fundamental shift in how we think about code documentation. Comments are no longer just for the junior developer joining the team next week; they are real-time control mechanisms for the autonomous agents working alongside you right now. 
-
-By strategically deploying `@AGENT_DIRECTIVE` comments, we've successfully curtailed AI bloat, ensuring that our silicon pair-programmers adhere strictly to NeuroHub's architectural vision.
+By strategically deploying `@AGENT_DIRECTIVE` comments, we've successfully curtailed AI bloat, ensuring that our silicon pair-programmers adhere strictly to NeuroHub's architectural vision. We've transformed our autonomous agents from chaotic, over-eager generators into disciplined, rule-abiding members of the engineering team.

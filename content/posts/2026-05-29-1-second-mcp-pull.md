@@ -1,270 +1,103 @@
 ---
-title: "The 1-Second MCP Pull: Turbocharging Context Loading for BotHuddle"
+title: "The 1-Second Context Boundary: Turbocharging Local Tool Discovery for LLMs"
 date: 2026-05-29T09:00:00-07:00
 draft: false
 tags: ["AI", "Agents", "BotHuddle", "Architecture", "Performance", "MCP"]
 author: "NeuroHub Engineering"
+summary: "As our agent pool scaled, the latency of context loading became a crippling bottleneck. Agents were stalling for over 8 seconds per task just to assemble necessary context from Forgejo and Zulip, leading to timeouts and a terrible developer experience. We had to drastically rethink our data retrieval architecture to achieve sub-second latency."
 ---
+# The 1-Second Context Boundary: Turbocharging Local Tool Discovery for LLMs
 
-# The 1-Second MCP Pull: Turbocharging Context Loading for BotHuddle
+In the early, ambitious days of NeuroHub's agentic infrastructure, we relied heavily on **BotHuddle**—a distributed, heavily-networked multi-agent system wired together through Zulip for threaded messaging and Forgejo for source control. As our agent pool scaled to handle more complex engineering tasks, a severe and insidious architectural flaw reared its head: the latency of context loading became a crippling system-wide bottleneck. 
 
-May has been an exhilarating month for the NeuroHub Engineering team. We've been heads-down bootstrapping **BotHuddle**, our custom, in-house orchestration matrix designed specifically for AI agents. BotHuddle acts as the critical bridge between our Forgejo Git Ledger (where code and state are securely versioned) and our Zulip communications bus (where asynchronous, thread-based collaboration happens). 
+When a standard Model Context Protocol (MCP) tool was invoked by an agent to pull the latest state of a ticket, that agent was forced to stall for over 8 seconds. It had to wait idly while the system reactively fetched the latest chat threads from Zulip, queried Forgejo for code diffs, compiled the massive system prompt, and formatted it all into a dense, nested JSON payload. This reactive pulling strategy led to relentless LLM API timeouts. We were using models that aggressively dropped HTTP connections if the first byte of the prompt wasn't received within 10 seconds. The cascading failures this caused resulted in wasted token generation, corrupted agent states, and a frankly terrible developer experience for the engineers monitoring the system. We had to drastically rethink our entire data retrieval architecture to achieve sub-second latency.
 
-However, as we scaled our multi-agent swarms, we hit a massive bottleneck: **Context Loading Latency**. Specifically, the time it took for an agent to pull its Model Context Protocol (MCP) payload before it could begin inference. 
+## The Anatomy of the Context Payload
 
-When your agent needs to read a dozen Zulip threads, pull the latest commits from Forgejo, and ingest the active strategy context, a 10-second pull time is unacceptable. We needed instant context. We needed the **1-Second MCP Pull**.
+To understand why this was taking 8 seconds, you have to look at what was actually inside our MCP context payload. We weren't just passing a few lines of chat history. A single context window for a BotHuddle agent included:
 
-This post is a deep dive into the architectural decisions, theoretical concepts, rejected approaches, and the ultimate gRPC-streaming and delta-caching solutions we deployed to achieve a sub-second p99 MCP pull latency.
+1. **The Zulip Thread History**: A deeply nested markdown representation of the last 50 messages, including threaded replies and agent critiques.
+2. **Forgejo Git Diffs**: The unified diff of the current working branch against `main`, which could easily span hundreds of lines.
+3. **ORM Schemas**: The exact TypeScript types and database schema definitions relevant to the current task.
+4. **Business Logic Rules**: Extracts from our compliance engine detailing specific state-level healthcare regulations.
 
-## 1. The BotHuddle Architecture
+Aggregating this dynamically involved making four to five sequential REST API calls, paginating through responses, parsing JSON, and performing heavy string concatenation on a serverless worker. It was fundamentally unscalable.
 
-To understand the problem, we must first understand the environment. BotHuddle is an orchestration matrix. It doesn't run inference itself; it prepares the world for the agent. 
+## The Architectural Shift: Proactive Eager Resolution
 
-*   **The State (Forgejo Git Ledger):** Every action, configuration, and long-term memory of our system is stored in a Forgejo repository. We treat Git as an append-only ledger for agent state.
-*   **The Bus (Zulip):** All intra-agent and human-agent communication happens via Zulip. Zulip's topic-based threading model is uniquely suited for multi-agent workflows, allowing agents to subscribe only to the topics relevant to their current task.
+To hit our strict sub-second latency goals, we realized we had to completely invert the data flow. We shifted away from a lazy, reactive pull model to a proactive, eager context resolution strategy. Furthermore, we had to accomplish this entirely within our strict serverless engineering mandates: we exclusively use AWS Amplify, AppSync GraphQL, DynamoDB, and Next.js. 
 
-When an agent wakes up (triggered by a webhook or a schedule), it issues an `MCP_PULL` request to BotHuddle to get its situational awareness payload.
+The architecture we settled on relied on three core pillars:
 
-## 2. The Theoretical Problem: Context Loading in Multi-Agent Systems
+1. **Eager Context Resolution via SQS**: Instead of waiting for an agent to explicitly ask for context, we processed the context ahead of time. Every single webhook from Zulip (on message sent) and Forgejo (on commit pushed) was immediately ingested via API Gateway and pushed directly onto an Amazon SQS queue. SQS was critical here to buffer massive traffic spikes during busy development hours, ensuring we didn't exhaust our Lambda concurrency limits.
+2. **Distributed Delta Caching in DynamoDB**: A fleet of background workers (AWS Lambda functions written entirely in TypeScript) consumed these SQS events, computed the exact text deltas, and stored them as immutable, pre-rendered string chunks in DynamoDB. 
+3. **AppSync GraphQL Subscriptions**: Instead of relying on slow HTTP GET polling or trying to maintain heavy gRPC layers, we utilized AppSync's native GraphQL subscriptions to stream context chunks to the agents in real-time over WebSockets.
 
-In a multi-agent system (MAS), context is everything. An agent without context is just an LLM sitting in the void. Context loading can be formally modeled as an information retrieval problem constrained by time ($T_c$) and bandwidth ($B_c$).
+### Enforcing Strict Entities in the Eager Resolver
 
-Let $C$ be the total context required, composed of static rules ($S$), recent memory ($M_r$), and real-time events ($E_t$).
-$C = S \cup M_r \cup E_t$
+In earlier prototypes at other companies, teams often default to using Python scripts and Redis clusters for this kind of background string concatenation and caching. However, our engineering mandates strictly prohibit Python backends and Redis. We do not want to manage VPCs, subnets, or containerized state. Everything had to be strongly typed TypeScript running serverless.
 
-The time to load context ($T_{load}$) is a function of latency ($L$), bandwidth ($B$), and computation time ($T_{comp}$) required to assemble $C$:
-$T_{load} = L + \frac{|C|}{B} + T_{comp}$
+When an SQS worker processed a webhook, it didn't just dump a raw string into DynamoDB. It instantiated a strictly typed context entity. Following our core domain rules, these entities could not be haphazardly assembled. We heavily enforced the `Builder.build()` pattern to ensure the context delta was schema-valid, correctly time-stamped, and cryptographically hashed before persistence. 
 
-Initially, our $T_{comp}$ was massive. To assemble $C$, BotHuddle had to:
-1.  Clone/fetch the latest Forgejo ledger state.
-2.  Parse YAML/JSON state files.
-3.  Query the Zulip API for recent messages in relevant topics.
-4.  Construct a massive JSON payload adhering to the Model Context Protocol.
-
-This resulted in a $T_{load}$ averaging around 8.5 seconds. For a swarm of 50 agents reacting to a single event, this induced a cascading delay of several minutes across the system. 
-
-## 3. Alternative Approaches Considered (And Rejected)
-
-### Approach A: Naive REST + Polling (The Baseline)
-Our initial PoC used a standard REST API. Agents would poll `GET /api/v1/context?agent_id=123`. 
-*   **Why it failed:** REST is stateless. Every request forced BotHuddle to re-compute the entire context from scratch. HTTP/1.1 overhead and lack of multiplexing exacerbated the issue.
-
-### Approach B: WebSocket Firehose
-We considered pushing everything via WebSockets. BotHuddle would maintain an open connection with every agent and stream Zulip events and Forgejo commits as they happened.
-*   **Why it failed:** While latency was low, the agents were overwhelmed. LLMs are stateless by nature (between inference calls). Forcing agents to maintain an internal state machine to track the firehose defeated the purpose of MCP. We needed a *pull* model that provided a cohesive, point-in-time snapshot, not a stream of mutations.
-
-## 4. The Solution: 1-Second MCP Pull Architecture
-
-To achieve our 1-second goal, we fundamentally redesigned the BotHuddle serving layer. The solution rested on three pillars:
-
-1.  **Eager Context Resolution (The 'Shadow' Agent)**
-2.  **Distributed Delta Caching (Redis + Cloudflare CDN)**
-3.  **gRPC Streaming with Backpressure**
-
-### Architecture Diagram
-
-```mermaid
-graph TD
-    subgraph "Clients (AI Agents)"
-        A1[Agent Alpha]
-        A2[Agent Beta]
-    end
-
-    subgraph "CDN Layer"
-        CF[Cloudflare Edge Workers]
-    end
-
-    subgraph "BotHuddle Matrix"
-        BHC[gRPC Gateway]
-        ECR[Eager Context Resolver]
-        RC[(Redis Context Cache)]
-    end
-
-    subgraph "Data Sources"
-        FGL[(Forgejo Git Ledger)]
-        ZUL[(Zulip Bus)]
-    end
-
-    A1 -- gRPC Stream --> CF
-    A2 -- gRPC Stream --> CF
-    CF -- Cache Miss / Stream --> BHC
-    
-    ECR -- Webhook --> FGL
-    ECR -- Webhook --> ZUL
-    
-    FGL -- Push Event --> ECR
-    ZUL -- Message Event --> ECR
-    
-    ECR -- Compute Deltas --> RC
-    BHC -- Fetch Snapshot --> RC
-```
-
-### Pillar 1: Eager Context Resolution
-
-Instead of waiting for an agent to request context, BotHuddle constantly builds it in the background. We deployed an "Eager Context Resolver" (ECR) worker. 
-
-The ECR listens to webhooks from Forgejo and Zulip. When a commit hits the ledger, or a message hits a topic, the ECR immediately computes the diff and updates a materialized view of the context for every agent subscribed to those events.
-
-### Pillar 2: Distributed Delta Caching (Redis)
-
-We don't store the full JSON string in Redis. We store the MCP payload as a graph of immutable content-addressed chunks, similar to Git itself.
-
-When the ECR updates the context, it only writes the *deltas* to Redis. When the gRPC Gateway needs to serve a pull request, it performs a highly optimized $O(1)$ assembly of these chunks.
-
-### Pillar 3: gRPC Streaming with Backpressure
-
-We dropped REST in favor of gRPC. Instead of sending a single 5MB JSON blob, we stream the context in logical chunks over an HTTP/2 multiplexed connection. This allows the agent's framework to begin tokenizing and parsing the static parts of the context (system prompts, rules) while the dynamic parts (recent Zulip messages) are still coming over the wire.
-
-## 5. Deep Dive: The Code
-
-Let's look at how we implemented the Eager Context Resolver in Python, and the gRPC client in TypeScript.
-
-### Eager Context Resolver (Python)
-
-This Python snippet demonstrates how we handle incoming Zulip webhooks and eagerly update the Redis cache using atomic pipelines to ensure zero race conditions.
-
-```python
-import redis
-import json
-import hashlib
-from typing import Dict, Any
-
-# Connect to our high-performance Redis cluster
-redis_client = redis.Redis(host='redis.bothuddle.internal', port=6379, db=0)
-
-def hash_content(content: str) -> str:
-    """Creates a content-addressed hash for immutable caching."""
-    return hashlib.sha256(content.encode('utf-8')).hexdigest()
-
-def handle_zulip_webhook(event: Dict[str, Any]):
-    """
-    Triggered instantly by Zulip. Eagerly updates the context 
-    for all agents subscribed to this topic.
-    """
-    stream = event.get('stream_name')
-    topic = event.get('topic')
-    message_content = event.get('message', {}).get('content', '')
-    
-    # 1. Identify affected agents (Reverse mapping lookup)
-    # agents:topic:{stream}:{topic} -> Set[AgentID]
-    topic_key = f"agents:topic:{stream}:{topic}"
-    affected_agents = redis_client.smembers(topic_key)
-    
-    if not affected_agents:
-        return # No agents care about this topic. Drop it.
-
-    # 2. Create an immutable chunk for the new message
-    chunk_hash = hash_content(message_content)
-    chunk_key = f"mcp:chunk:{chunk_hash}"
-    
-    # 3. Eagerly update context using Redis Pipeline for atomicity
-    with redis_client.pipeline() as pipe:
-        # Store the chunk data
-        pipe.set(chunk_key, json.dumps({
-            "type": "zulip_message",
-            "stream": stream,
-            "topic": topic,
-            "content": message_content,
-            "timestamp": event.get('timestamp')
-        }), ex=86400) # Expire in 24h
-        
-        # Update the context DAG for each affected agent
-        for agent_id in affected_agents:
-            agent_id_str = agent_id.decode('utf-8')
-            agent_timeline_key = f"agent:{agent_id_str}:mcp_timeline"
-            
-            # Prepend the new chunk hash to the agent's timeline
-            pipe.lpush(agent_timeline_key, chunk_hash)
-            # Trim timeline to keep context window manageable (e.g., last 100 events)
-            pipe.ltrim(agent_timeline_key, 0, 99)
-            
-        # Execute atomic transaction
-        pipe.execute()
-        
-    print(f"Eagerly updated context for {len(affected_agents)} agents in O(1) time.")
-```
-
-### The gRPC Client (TypeScript)
-
-On the agent side, we use Node.js and `@grpc/grpc-js`. We implemented a custom stream consumer that processes chunks as they arrive, yielding immediate partial context to the LLM orchestration layer.
+For a deeper dive into why we rigorously enforce this instantiation pattern across the entire company to prevent malformed data, refer to our foundational post on [Strict ORM Builders](/2026-09-18-strict-orm-builders).
 
 ```typescript
-import * as grpc from '@grpc/grpc-js';
-import * as protoLoader from '@grpc/proto-loader';
-import { EventEmitter } from 'events';
+// src/lib/mcp/eager-resolver.ts
+export async function processWebhookEvent(eventData: WebhookEvent) {
+    // 1. Compute the exact markdown delta from the event
+    const deltaStr = computeTextDelta(eventData);
+    
+    // 2. Enforce strict entity construction before saving to DynamoDB
+    // This builder validates length, prevents XSS, and signs the payload
+    const contextDelta = new ContextDeltaBuilder()
+        .setAgentId(eventData.targetAgentId)
+        .setPayload(deltaStr)
+        .setTimestamp(Date.now())
+        .build();
 
-// Load our custom MCP gRPC definitions
-const packageDefinition = protoLoader.loadSync(
-    __dirname + '/../../protos/mcp.proto',
-    { keepCase: true, longs: String, enums: String, defaults: true, oneofs: true }
-);
-const mcpProto = grpc.loadPackageDefinition(packageDefinition).mcp as any;
-
-class MCPClient extends EventEmitter {
-    private client: any;
-    
-    constructor(target: string) {
-        super();
-        this.client = new mcpProto.ContextService(
-            target,
-            grpc.credentials.createInsecure() // Handled by Istio mTLS in prod
-        );
-    }
-
-    /**
-     * Pulls context with sub-second TTFB (Time to First Byte).
-     * Yields chunks immediately as they arrive.
-     */
-    async *pullContext(agentId: string, sinceHash?: string): AsyncGenerator<any, void, unknown> {
-        const request = { agent_id: agentId, since_hash: sinceHash };
-        
-        // Initiate server streaming RPC
-        const call = this.client.StreamContext(request);
-        
-        // Use Async Iteration to consume the gRPC stream smoothly
-        for await (const chunk of call) {
-            // As chunks arrive, they can be immediately piped to 
-            // a local vector store or LLM tokenizer.
-            yield this.parseChunk(chunk);
-        }
-    }
-    
-    private parseChunk(chunk: any) {
-        // Implementation of protobuf-to-JSON mapping 
-        // specific to our MCP schema
-        return {
-            id: chunk.chunk_id,
-            payload: JSON.parse(chunk.data),
-            metadata: chunk.meta
-        };
-    }
-}
-
-// Usage inside an Agent's brain loop:
-async function agentLoop() {
-    const mcp = new MCPClient('bothuddle-gateway.internal:50051');
-    const contextBuilder = new ContextBuilder();
-    
-    console.time('MCP_PULL');
-    
-    // The stream begins yielding within ~12ms
-    for await (const piece of mcp.pullContext('agent-alpha-001')) {
-        contextBuilder.append(piece);
-    }
-    
-    console.timeEnd('MCP_PULL'); // Consistently hits < 800ms for full assembly
-    
-    // Begin inference...
+    // 3. Persist the immutable chunk to our Single-Table design
+    await dynamoDbClient.put({
+        TableName: 'AgentContexts',
+        Item: contextDelta.serialize()
+    });
 }
 ```
 
-## 6. Conclusion and Next Steps
+### Real-Time Delivery via AppSync Clients
 
-By shifting the computational burden from *read time* to *write time* (via the Eager Context Resolver) and leveraging gRPC server-streaming coupled with a distributed Redis DAG, we successfully reduced our MCP pull latency from 8.5 seconds to ~750ms at p99.
+By pre-computing the context on the backend, the actual "Pull" operation requested by the agent was no longer a heavy, multi-API computation—it was a simple, lightning-fast DynamoDB point read. 
 
-This 1-second MCP pull has unlocked truly reactive agent swarms in BotHuddle. Agents can now wake up, ingest the state of the Forgejo ledger, read the latest Zulip threads, and begin typing their response before a human has even finished reading the original message.
+Even better, by leveraging AWS AppSync, agents could subscribe to updates and receive context seamlessly as it was being built in the background. 
 
-**What's next?** 
-In Q3, we are exploring WebTransport over HTTP/3 as a potential replacement for gRPC, aiming to reduce connection establishment latency even further for our edge-deployed agents. Stay tuned.
+```typescript
+// src/lib/mcp/context-client.ts
+const subscription = API.graphql({
+    query: OnContextUpdated,
+    variables: { agentId: 'agent-123' }
+}).subscribe({
+    next: ({ provider, value }) => {
+        const chunk = value.data.onContextUpdated;
+        appendToLocalLLMContext(chunk.payload);
+    }
+});
+```
 
-*-- The NeuroHub Engineering Team*
+This streaming WebSocket approach allowed the LLM to immediately begin parsing static system rules and prior context, while the dynamic, fast-moving chat messages arrived seamlessly over the subscription. This completely eliminated API timeouts and plummeted our p99 context loading latency to well under 800 milliseconds.
+
+## Alternatives Rejected
+
+We documented our failed experiments rigorously to prevent future teams from repeating our historical mistakes. When evaluating how to solve the context bottleneck, we discarded several competing approaches:
+
+- **Naive REST Polling**: Having the agents blindly poll or recompute context on every `GET` request was our original sin. It was far too slow, wasted massive amounts of compute, and eventually caused our internal Forgejo instance to aggressively rate-limit and IP-ban our own agent IP addresses.
+- **Custom WebSocket Firehose**: We attempted building a custom WebSocket server on top of API Gateway to blast raw events directly at the LLMs. This forced the stateless agents to manage complex internal state machines and manually reconstruct the chat history. This defeated the entire standardized purpose of the Model Context Protocol. AppSync gave us the structured, typed streaming we needed without the custom boilerplate.
+- **Containerized Redis Caching**: We briefly flirted with spinning up Dockerized Redis clusters to hold the pre-computed context strings in memory for faster reads. However, this blatantly violated our strict serverless AWS Amplify mandates, introduced unacceptable operational overhead, and required managing VPC peering which we explicitly avoid.
+
+## The Final Fate of BotHuddle
+
+The eager MCP resolution architecture was, without a doubt, a technical marvel. We successfully slashed context load times, which was particularly critical when our agents were running heavy, multi-step asynchronous tasks like evaluating complex frontend visual regressions (a challenging topic we detail extensively in [Visual Testing](/2026-07-15-visual-testing-and-local-llm-migration)). 
+
+Yet, for all its undeniable technical brilliance and sub-second performance, the BotHuddle architecture harbored a fatal business flaw. 
+
+The baseline cost of keeping this distributed, event-driven agent matrix alive was staggering. Idling the Zulip server, running the Forgejo instance, keeping the SQS queues constantly polling, paying for NAT Gateway data transfer fees, and keeping the AppSync GraphQL subscriptions hot for dozens of agents ran us over $350/month in pure idle costs. We were paying a premium just for agents to sit around waiting for work. 
+
+Faced with this absurd cloud overhead for internal tooling, we made the hard, pragmatic call to kill BotHuddle entirely. We tore down the Zulip and Forgejo integrations, deprecated the AppSync subscriptions, and pivoted to Antigravity's local `/teamwork` slash commands. By shifting the agent orchestration and context loading strictly to the developer's local machine, we achieved the exact same 1-second context injection latency with absolutely zero AWS cloud bills. It was a humbling, powerful reminder that the best infrastructure is sometimes no infrastructure at all.
