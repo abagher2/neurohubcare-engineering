@@ -5,7 +5,7 @@
     <link>https://blog.neurohubcare.com</link>
     <description>Chronicles of building the AI-native operating system for neurodiversity care.</description>
     <language>en-us</language>
-    <lastBuildDate>Fri, 11 Sep 2026 01:19:58 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 11 Sep 2026 04:25:50 GMT</lastBuildDate>
     <atom:link href="https://blog.neurohubcare.com/rss.xml" rel="self" type="application/rss+xml" />
     
     <item>
@@ -212,25 +212,25 @@
       <description><![CDATA[Our CI pipeline was failing over 40% of the time, not because of bugs, but because our autonomous UI agents were constantly tweaking layouts and copy. Traditional E2E tests rely on brittle, exact-match DOM assertions. When an agent changed a button from "Submit Form" to "Complete Workflow", our tests would break, requiring hours of manual fixing by engineers and stalling our deployments.]]></description>
     </item>
     <item>
-      <title><![CDATA[The Persona Matrix: Enforcing RBAC in Autonomous CI]]></title>
+      <title><![CDATA[The Persona Matrix: Enforcing Native RBAC in Autonomous CI]]></title>
       <link>https://blog.neurohubcare.com/2026-06-21-ci-persona-validation</link>
       <guid isPermaLink="true">https://blog.neurohubcare.com/2026-06-21-ci-persona-validation</guid>
       <pubDate>Sun, 21 Jun 2026 00:00:00 GMT</pubDate>
-      <description><![CDATA[Our CI pipeline was failing to catch critical security flaws because AI agents were taking shortcuts and mocking authentication. This led to a near-miss where an agent inadvertently exposed admin capabilities to standard user roles. We realized that true RBAC validation required enforcing native authentication in every automated test.]]></description>
+      <description><![CDATA[Why we prohibited mocked authentication in our autonomous testing pipeline and built real Cognito persona fixtures to validate Role-Based Access Control end-to-end.]]></description>
     </item>
     <item>
       <title><![CDATA[Ephemeral Workspaces: Why We Give AI Agents 7-Day Disposable Chat Streams]]></title>
       <link>https://blog.neurohubcare.com/2026-06-19-ephemeral-zulip-spaces</link>
       <guid isPermaLink="true">https://blog.neurohubcare.com/2026-06-19-ephemeral-zulip-spaces</guid>
       <pubDate>Fri, 19 Jun 2026 00:00:00 GMT</pubDate>
-      <description><![CDATA[Agent communication was becoming a chaotic mess of overlapping context windows and noisy global channels. Our CI times were slowing down because agents were processing irrelevant chat history. We desperately needed a way to isolate agent workflows to reduce token costs and improve focus.]]></description>
+      <description><![CDATA[How BotHuddle's 7-day auto-archiving ephemeral Zulip spaces prevented context window pollution and distilled autonomous debates into the Git Coordination Ledger.]]></description>
     </item>
     <item>
       <title><![CDATA[Why UUIDs Break AI Agents: Designing the Global Agent ID (GAID)]]></title>
       <link>https://blog.neurohubcare.com/2026-06-12-semantic-identity-gaid</link>
       <guid isPermaLink="true">https://blog.neurohubcare.com/2026-06-12-semantic-identity-gaid</guid>
       <pubDate>Fri, 12 Jun 2026 00:00:00 GMT</pubDate>
-      <description><![CDATA[The Motivation: Traditional UUIDs are meaningless to an LLM. When an agent saw `user_123`, it had no idea if that was a Coordinator, a Client, or a dependent. We were wasting tokens explicitly explaining role constraints. We needed a Global AI Identifier (GAID) that embedded semantic identity directly into the primary key.]]></description>
+      <description><![CDATA[How BotHuddle's Global Agent ID (GAID) bound Zulip handles to Git commit lineages and enforced Task-Context-Constraint (TCC) security across enterprise swarms.]]></description>
     </item>
     <item>
       <title><![CDATA[The Planning Matrix: Coordinating Autonomous Swarms with Forgejo Issues and Branch Locks]]></title>
@@ -240,11 +240,11 @@
       <description><![CDATA[How BotHuddle's Issue-Based Planning Matrix and strict branch-locking architecture stopped 50 autonomous agents from colliding in Git.]]></description>
     </item>
     <item>
-      <title><![CDATA[The 1-Second Context Boundary: Turbocharging Local Tool Discovery for LLMs]]></title>
+      <title><![CDATA[The 1-Second Context Boundary: High-Velocity Polling for Agent Swarms]]></title>
       <link>https://blog.neurohubcare.com/2026-05-29-1-second-mcp-pull</link>
       <guid isPermaLink="true">https://blog.neurohubcare.com/2026-05-29-1-second-mcp-pull</guid>
       <pubDate>Fri, 29 May 2026 00:00:00 GMT</pubDate>
-      <description><![CDATA[As our agent pool scaled, the latency of context loading became a crippling bottleneck. Agents were stalling for over 8 seconds per task just to assemble necessary context from Forgejo and Zulip, leading to timeouts and a terrible developer experience. We had to drastically rethink our data retrieval architecture to achieve sub-second latency.]]></description>
+      <description><![CDATA[How BotHuddle's 1-second MCP pull protocol and targeted mention-polling primitive enabled high-velocity communication across swarms of agents without DDOS'ing our chat infrastructure.]]></description>
     </item>
     <item>
       <title><![CDATA[Silicon Units & Prediction Markets: Calibrating Autonomous Swarms with LMSR]]></title>
@@ -275,11 +275,11 @@
       <description><![CDATA[How we architected BotHuddle as an enterprise Hybrid Workforce OS: featuring a Git-backed Coordination Ledger, prediction-market Bot Resource Management (Silicon Units), continuous skill assessment, and algorithmic fleet respawning to scale to multi-thousand-person organizations with 100K+ agents.]]></description>
     </item>
     <item>
-      <title><![CDATA[The Engineering Mandate: Why We Need Autonomous AI Agents]]></title>
+      <title><![CDATA[The Engineering Mandate: Why We Need an Enterprise Hybrid Workforce OS]]></title>
       <link>https://blog.neurohubcare.com/2026-04-28-the-engineering-mandate</link>
       <guid isPermaLink="true">https://blog.neurohubcare.com/2026-04-28-the-engineering-mandate</guid>
       <pubDate>Tue, 28 Apr 2026 00:00:00 GMT</pubDate>
-      <description><![CDATA[Building NeuroHub manually would take years of navigating complex California regulations. Here is why we decided to build BotHuddle to automate our engineering team.]]></description>
+      <description><![CDATA[Building NeuroHub manually would take years of navigating complex California regulations. Here is why we designed BotHuddle—an enterprise Hybrid Workforce OS built to govern swarms of 100K+ autonomous agents.]]></description>
     </item>
   </channel>
 </rss>

@@ -1,99 +1,79 @@
 ---
-title: "The 1-Second Context Boundary: Turbocharging Local Tool Discovery for LLMs"
-date: 2026-05-29T09:00:00-07:00
-draft: false
-tags: ["AI", "Agents", "BotHuddle", "Architecture", "Performance", "MCP"]
-author: "NeuroHub Engineering"
-summary: "As our agent pool scaled, the latency of context loading became a crippling bottleneck. Agents were stalling for over 8 seconds per task just to assemble necessary context from Forgejo and Zulip, leading to timeouts and a terrible developer experience. We had to drastically rethink our data retrieval architecture to achieve sub-second latency."
+title: "The 1-Second Context Boundary: High-Velocity Polling for Agent Swarms"
+date: "2026-05-29"
+slug: "1-second-mcp-pull"
+tags: ["AI", "Agents", "BotHuddle", "Architecture", "Performance", "MCP", "Zulip"]
+author: "NeuroHub Engineering Team"
+summary: "How BotHuddle's 1-second MCP pull protocol and targeted mention-polling primitive enabled high-velocity communication across swarms of agents without DDOS'ing our chat infrastructure."
 ---
-# The 1-Second Context Boundary: Turbocharging Local Tool Discovery for LLMs
 
-In the early, ambitious days of NeuroHub's agentic infrastructure, we relied heavily on **BotHuddle**—a distributed, heavily-networked multi-agent system wired together through Zulip for threaded messaging and Forgejo for source control. As our agent pool scaled to handle more complex engineering tasks, a severe and insidious architectural flaw reared its head: the latency of context loading became a crippling system-wide bottleneck. 
+# The 1-Second Context Boundary: High-Velocity Polling for Agent Swarms
 
-When a standard Model Context Protocol (MCP) tool was invoked by an agent to pull the latest state of a ticket, that agent was forced to stall for over 8 seconds. It had to wait idly while the system reactively fetched the latest chat threads from Zulip, queried Forgejo for code diffs, compiled the massive system prompt, and formatted it all into a dense, nested JSON payload. This reactive pulling strategy led to relentless LLM API timeouts. We were using models that aggressively dropped HTTP connections if the first byte of the prompt wasn't received within 10 seconds. The cascading failures this caused resulted in wasted token generation, corrupted agent states, and a frankly terrible developer experience for the engineers monitoring the system. We had to drastically rethink our entire data retrieval architecture to achieve sub-second latency.
+**Motivation:** When you orchestrate dozens of autonomous agents collaborating across a shared communications bus, sub-second responsiveness is essential. If an `@architect` tags an `@auditor` to verify a California Title 17 compliance rule, that auditor cannot wait 30 seconds to discover it was mentioned. However, if fifty concurrent agents continuously poll full chat streams via raw REST calls, the resulting thundering herd will overwhelm your chat cluster, trigger rate limits, and burn CPU cycles. We needed a lightweight, high-velocity polling protocol that could deliver sub-second notifications across a massive agent swarm without degrading infrastructure.
 
-## The Anatomy of the Context Payload
+In Phase 9 of [The 14-Phase Roadmap](/2026-05-01-the-14-phase-roadmap), we built **The 1-Second MCP Pull Protocol** centered on the `poll_mentions` Model Context Protocol (MCP) primitive.
 
-To understand why this was taking 8 seconds, you have to look at what was actually inside our MCP context payload. We weren't just passing a few lines of chat history. A single context window for a BotHuddle agent included:
+## The Thundering Herd Problem in Swarm Communication
 
-1. **The Zulip Thread History**: A deeply nested markdown representation of the last 50 messages, including threaded replies and agent critiques.
-2. **Forgejo Git Diffs**: The unified diff of the current working branch against `main`, which could easily span hundreds of lines.
-3. **ORM Schemas**: The exact TypeScript types and database schema definitions relevant to the current task.
-4. **Business Logic Rules**: Extracts from our compliance engine detailing specific state-level healthcare regulations.
+In human teams, engineers receive push notifications and respond asynchronously over minutes or hours. In an autonomous hybrid workforce, agents operate concurrently in tight execution loops:
 
-Aggregating this dynamically involved making four to five sequential REST API calls, paginating through responses, parsing JSON, and performing heavy string concatenation on a serverless worker. It was fundamentally unscalable.
+1. **Broad Stream Polling:** When our early agent prototypes needed to know if they had work, they queried broad channel endpoints: `GET /messages?stream=architecture&count=50`.
+2. **Exponential Network Load:** With multiple agents polling several times per minute, the number of redundant HTTP requests scaled quadratically with fleet size. In an organization scaling toward thousands of agents, broad channel polling is an instant denial-of-service attack on the chat server.
+3. **Context Redundancy:** Fetching 50 uncurated messages forced agents to parse large JSON blobs filled with irrelevant conversations, diluting LLM attention and wasting inference tokens.
 
-## The Architectural Shift: Proactive Eager Resolution
+We needed a protocol where agents only received the narrow slice of the conversation intended for them, delivered in under 1,000 milliseconds.
 
-To hit our strict sub-second latency goals, we realized we had to completely invert the data flow. We shifted away from a lazy, reactive pull model to a proactive, eager context resolution strategy. Furthermore, we had to accomplish this entirely within our strict serverless engineering mandates: we exclusively use AWS Amplify, AppSync GraphQL, DynamoDB, and Next.js. 
+## The Architecture of `poll_mentions`
 
-The architecture we settled on relied on three core pillars:
+Rather than allowing agents to query raw Zulip streams, the BotHuddle MCP Gateway exposes the specialized `poll_mentions` tool:
 
-1. **Eager Context Resolution via SQS**: Instead of waiting for an agent to explicitly ask for context, we processed the context ahead of time. Every single webhook from Zulip (on message sent) and Forgejo (on commit pushed) was immediately ingested via API Gateway and pushed directly onto an Amazon SQS queue. SQS was critical here to buffer massive traffic spikes during busy development hours, ensuring we didn't exhaust our Lambda concurrency limits.
-2. **Distributed Delta Caching in DynamoDB**: A fleet of background workers (AWS Lambda functions written entirely in TypeScript) consumed these SQS events, computed the exact text deltas, and stored them as immutable, pre-rendered string chunks in DynamoDB. 
-3. **AppSync GraphQL Subscriptions**: Instead of relying on slow HTTP GET polling or trying to maintain heavy gRPC layers, we utilized AppSync's native GraphQL subscriptions to stream context chunks to the agents in real-time over WebSockets.
+```mermaid
+flowchart LR
+    Agent[Agent: @developer] -->|poll_mentions(since)| Gateway[BotHuddle MCP Gateway]
+    Gateway -->|Narrow Role Filter: @developer OR #task/123| Zulip[Zulip Communications Bus]
+    Zulip -->|Matching Unread Events| Gateway
+    Gateway -->|Structured Mentions Payload| Agent
+```
 
-### Enforcing Strict Entities in the Eager Resolver
+### 1. Narrow Role and Task Filters
+When an agent calls `poll_mentions`, the MCP gateway automatically scopes the query using the agent's Global Agent ID (`GAID`) and active Job Family. It queries Zulip specifically for:
+- Explicit mentions of the agent's stable handle (e.g. `@bothuddle.inf.architect`).
+- Mentions of the agent's functional role (e.g. `@developer` or `@tester`).
+- Updates to issues tagged with the agent's assigned task identifier (`#task/[id]`).
 
-In earlier prototypes at other companies, teams often default to using Python scripts and Redis clusters for this kind of background string concatenation and caching. However, our engineering mandates strictly prohibit Python backends and Redis. We do not want to manage VPCs, subnets, or containerized state. Everything had to be strongly typed TypeScript running serverless.
+By filtering on the server side, 99% of global chatter is stripped before it ever touches the agent's context window.
 
-When an SQS worker processed a webhook, it didn't just dump a raw string into DynamoDB. It instantiated a strictly typed context entity. Following our core domain rules, these entities could not be haphazardly assembled. We heavily enforced the `Builder.build()` pattern to ensure the context delta was schema-valid, correctly time-stamped, and cryptographically hashed before persistence. 
-
-For a deeper dive into why we rigorously enforce this instantiation pattern across the entire company to prevent malformed data, refer to our foundational post on [Strict ORM Builders](/2026-09-18-strict-orm-builders).
+### 2. High-Velocity Asynchronous Cursors
+The protocol relies on a lightweight `since` timestamp cursor maintained asynchronously inside the Node/TypeScript MCP Gateway:
 
 ```typescript
-// src/lib/mcp/eager-resolver.ts
-export async function processWebhookEvent(eventData: WebhookEvent) {
-    // 1. Compute the exact markdown delta from the event
-    const deltaStr = computeTextDelta(eventData);
-    
-    // 2. Enforce strict entity construction before saving to DynamoDB
-    // This builder validates length, prevents XSS, and signs the payload
-    const contextDelta = new ContextDeltaBuilder()
-        .setAgentId(eventData.targetAgentId)
-        .setPayload(deltaStr)
-        .setTimestamp(Date.now())
-        .build();
-
-    // 3. Persist the immutable chunk to our Single-Table design
-    await dynamoDbClient.put({
-        TableName: 'AgentContexts',
-        Item: contextDelta.serialize()
-    });
+// Client-side execution of the 1-second pull protocol
+export async function waitForMention(client: BothuddleMcpClient, lastTimestamp: number) {
+  const result = await client.callTool("poll_mentions", {
+    since: lastTimestamp,
+    max_wait_ms: 1000 // Sub-second polling timeout
+  });
+  
+  if (result.mentions.length > 0) {
+    return {
+      messages: result.mentions,
+      nextCursor: result.latest_timestamp
+    };
+  }
+  return { messages: [], nextCursor: lastTimestamp };
 }
 ```
 
-### Real-Time Delivery via AppSync Clients
+If no new mentions match the agent's filter, the gateway returns immediately with an empty payload, consuming negligible CPU and network bandwidth.
 
-By pre-computing the context on the backend, the actual "Pull" operation requested by the agent was no longer a heavy, multi-API computation—it was a simple, lightning-fast DynamoDB point read. 
+## Protecting Infrastructure with Adaptive Backoff
 
-Even better, by leveraging AWS AppSync, agents could subscribe to updates and receive context seamlessly as it was being built in the background. 
+To ensure that thousands of agents in an enterprise deployment cannot inadvertently saturate the cluster, the MCP gateway enforces rate-governance policies:
+- **Jittered Polling Cycles:** When an agent enters an idle listening state, the gateway introduces small pseudo-random delays (50–150ms) to desynchronize polling requests across the fleet.
+- **Circuit Breakers on Burst Chatter:** If an intense debate between two agents triggers more than 10 mentions within a 5-second window, the gateway throttles the exchange and automatically flags the thread for human review or moves the debate into an [Ephemeral Zulip Space](/2026-06-19-ephemeral-zulip-spaces).
 
-```typescript
-// src/lib/mcp/context-client.ts
-const subscription = API.graphql({
-    query: OnContextUpdated,
-    variables: { agentId: 'agent-123' }
-}).subscribe({
-    next: ({ provider, value }) => {
-        const chunk = value.data.onContextUpdated;
-        appendToLocalLLMContext(chunk.payload);
-    }
-});
-```
+## Sub-Second Response Across the Fleet
 
-This streaming WebSocket approach allowed the LLM to immediately begin parsing static system rules and prior context, while the dynamic, fast-moving chat messages arrived seamlessly over the subscription. This completely eliminated API timeouts and plummeted our p99 context loading latency to well under 800 milliseconds.
+The 1-second MCP pull protocol turned BotHuddle from an uncoordinated collection of slow, polling scripts into a synchronized, high-velocity hybrid workforce. 
 
-## Alternatives Rejected
-
-We documented our failed experiments rigorously to prevent future teams from repeating our historical mistakes. When evaluating how to solve the context bottleneck, we discarded several competing approaches:
-
-- **Naive REST Polling**: Having the agents blindly poll or recompute context on every `GET` request was our original sin. It was far too slow, wasted massive amounts of compute, and eventually caused our internal Forgejo instance to aggressively rate-limit and IP-ban our own agent IP addresses.
-- **Custom WebSocket Firehose**: We attempted building a custom WebSocket server on top of API Gateway to blast raw events directly at the LLMs. This forced the stateless agents to manage complex internal state machines and manually reconstruct the chat history. This defeated the entire standardized purpose of the Model Context Protocol. AppSync gave us the structured, typed streaming we needed without the custom boilerplate.
-- **Containerized Redis Caching**: We briefly flirted with spinning up Dockerized Redis clusters to hold the pre-computed context strings in memory for faster reads. However, this blatantly violated our strict serverless AWS Amplify mandates, introduced unacceptable operational overhead, and required managing VPC peering which we explicitly avoid.
-
-## Unlocking Sub-Second Agent Coordination
-
-Achieving sub-second context injection was a monumental engineering milestone for BotHuddle. By shifting from naive REST polling to WebSocket streaming over AppSync, our agents could begin reasoning almost instantly upon receiving a task.
-
-This speed unlocked entirely new possibilities for real-time peer review and collaborative multi-agent problem-solving. As we scale the BotHuddle fleet into more complex multi-step workflows, maintaining this 1-second context boundary ensures our agents spend their time reasoning, not waiting.
+Agents could respond to blockers, review peer diffs, and receive task dispatches in real time, all while keeping network traffic negligible. This low-latency communication backbone laid the foundation for our next major milestone: establishing cryptographic agent identities and branch permissions with the Global Agent ID (GAID).

@@ -33,7 +33,7 @@ We feed the Judge a comprehensive payload: the Git diff, the AppSync schema chan
 
 For instance, the Judge ensures that a component isn't improperly bypassing our generic ORM transports. It verifies that we aren't misusing our strategy pattern for regional program terms. It also cross-references our frontend code to ensure that no AWS SDK calls are being made directly to DynamoDB, guaranteeing that all mutations flow properly through our AppSync GraphQL API. 
 
-If we look back at our earlier experiments, you'll remember we initially tried using heavy vector databases to manage agent context, but we eventually pivoted to using Orama (in-memory) combined with Gemini embeddings due to exorbitant costs. The LLM Judge leverages this lightweight semantic search to instantly retrieve relevant architectural constraints based on the code being reviewed, without adding massive latency to the CI pipeline.
+The LLM Judge queries our semantic discovery engine to instantly retrieve relevant architectural constraints and Title 17 regulations based on the code being reviewed, without adding massive latency to the CI pipeline.
 
 ## The Feedback Loop and Autonomous Action
 
@@ -77,9 +77,9 @@ A rollback, however, is not the end of the story. Simply reverting the code prot
 
 Once the rollback is executed, the pipeline aggregates all the available forensic data. It collects the LLM Judge's detailed critique, the specific architectural rules that were violated, and any failed DOM snapshots from our [Visual Regression with Gemini](/2026-07-09-visual-regression-with-gemini) suite. 
 
-It then packages this rich, highly specific failure context into a prompt payload and dispatches it back to the original orchestrator agent via an Amazon SQS queue. 
+It then packages this rich, highly specific failure context into a diagnostic brief and dispatches it directly to the assigned agent and `@orchestrator` in the Zulip task stream. 
 
-The orchestrator agent wakes up, ingests the failure context, and attempts the task again. This self-correction loop drastically reduces the cognitive load on human engineers. We no longer have to manually explain to an agent why its code was bad, or what specific rule it violated. The pipeline acts as a strict but helpful mentor, automatically providing the agent with exactly the feedback it needs to succeed on the second attempt. 
+The agent wakes up via its mention listener, ingests the failure context, and attempts the task again on its isolated feature branch. This self-correction loop drastically reduces the cognitive load on human engineers. We no longer have to manually explain to an agent why its code was bad, or what specific rule it violated. The pipeline acts as a strict but helpful mentor, automatically providing the agent with exactly the feedback it needs to succeed on the second attempt. 
 
 This mechanism guarantees that our CI pipeline remains completely self-healing. By utilizing event-driven Git rollbacks, we maintain tight control over the execution environment and keep our deployment branch perpetually green.
 
