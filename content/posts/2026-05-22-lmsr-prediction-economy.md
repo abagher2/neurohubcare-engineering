@@ -1,87 +1,80 @@
 ---
-title: "Silicon Units & Prediction Markets: How We Forced AI Agents to Pay for Compute"
+title: "Silicon Units & Prediction Markets: Calibrating Autonomous Swarms with LMSR"
 date: "2026-05-22"
 slug: "lmsr-prediction-economy"
 tags: ["ai", "agents", "lmsr", "bothuddle", "architecture"]
-summary: "How BotHuddle used Compute-Backed Prediction Markets (CBPM) to mathematically align real LLM token costs, LMSR share pricing, and top-down budget planning."
+summary: "How BotHuddle paired Robin Hanson's Logarithmic Market Scoring Rule (LMSR) with Silicon Units to mathematically align agent incentives, calibrate confidence, and eliminate hallucination drift."
 ---
-# Silicon Units & Prediction Markets: How We Forced AI Agents to Pay for Compute
 
-**Motivation:** In our early multi-agent experiments, our cloud infrastructure bills scaled linearly with agent count while code quality plateaued. We called this the "hallucination tax." Agents would confidently invent non-existent APIs or rewrite existing abstractions from scratch, burning through LLM tokens without consequence. We needed a ruthless, market-driven mechanism where agents paid for their own compute, staked their own survival on plan accuracy, and operated under strict budgetary governance.
+# Silicon Units & Prediction Markets: Calibrating Autonomous Swarms with LMSR
 
-This led us to design **Compute-Backed Prediction Markets (CBPM)** for BotHuddle, pairing Robin Hanson's Logarithmic Market Scoring Rule (LMSR) with our unified execution currency: **Silicon Units (SU)**.
+**Motivation:** In our multi-agent swarms, the most dangerous failure mode wasn't syntax errors or compiler crashes—it was uncalibrated agent confidence. Autonomous agents would write extensive proposals or rewrite existing services, declaring 100% confidence while introducing subtle architectural drift. With no economic stake in the validity of their claims, agents treated speculative assertions the same as proven invariants. We needed a mathematical mechanism that forced agents to calibrate their claims, penalize unwarranted optimism, and align team consensus before merging code.
 
-## The Triad: Aligning Token Cost, Prediction Markets, and Waterfall Budgeting
+To solve this, we implemented an internal prediction economy for BotHuddle in Phase 2 of [The 14-Phase Roadmap](/2026-05-01-the-14-phase-roadmap), pairing Robin Hanson's **Logarithmic Market Scoring Rule (LMSR)** with our internal resource currency: **Silicon Units (SU)**.
 
-The core breakthrough of BotHuddle was unifying three traditionally isolated concerns into a single mathematical feedback loop:
+## The Mathematical Foundation: Hanson's LMSR
 
-1. **Physical Token Consumption (Compute Rent):** Every LLM prompt, context extraction, and tool execution burns physical compute measured in Silicon Units (SU).
-2. **The LMSR Market (Decentralized Consensus):** A continuous automated market maker pricing the likelihood of a project's technical success.
-3. **Waterfall Budget Planning (Organizational Governance):** Top-down capital allocation cascading from executive strategy down to agent execution.
+An automated market maker (AMM) is required because agent swarms are thin, asynchronous markets; you cannot rely on an active human order book to match continuous bids. Hanson's LMSR guarantees infinite liquidity, bounded loss for the market organizer, and instantaneous probability pricing for any project SMART goal.
+
+In BotHuddle's `gateway-api/routers/economy.py`, each project or milestone phase initializes a dedicated prediction market with two mutually exclusive outcomes: `YES` (the phase will pass verification and merge cleanly) and `NO` (the phase will fail verification or be rejected).
+
+The cost function $C(q)$ represents the total money pledged in the market given the vector of outstanding shares $q = [q_{\text{yes}}, q_{\text{no}}]$:
+
+$$ C(q) = b \cdot \ln\left( e^{q_{\text{yes}} / b} + e^{q_{\text{no}} / b} \right) $$
+
+where $b$ is the liquidity parameter. In BotHuddle, $b$ is dynamically scaled to ensure the market can absorb bets without excessive slippage while staying constrained by the active fleet's capital:
+
+$$ b = \max(\text{median\_su\_balance} \times 0.1, 10.0) $$
+
+The instantaneous price of a share—which directly represents the market's calibrated probability of that outcome—is the partial derivative of the cost function:
+
+$$ P(\text{YES}) = \frac{e^{q_{\text{yes}} / b}}{e^{q_{\text{yes}} / b} + e^{q_{\text{no}} / b}}, \quad P(\text{NO}) = \frac{e^{q_{\text{no}} / b}}{e^{q_{\text{yes}} / b} + e^{q_{\text{no}} / b}} $$
+
+```python
+def get_market_prices(q_yes: float, q_no: float, b: float) -> dict:
+    exp_yes, exp_no = math.exp(q_yes / b), math.exp(q_no / b)
+    total = exp_yes + exp_no
+    return {"p_yes": exp_yes / total, "p_no": exp_no / total}
+
+def market_cost_function(q_yes: float, q_no: float, b: float) -> float:
+    return b * math.log(math.exp(q_yes / b) + math.exp(q_no / b))
+```
+
+When an agent wants to purchase $\Delta q$ shares of `YES`, the cost in Silicon Units is simply the difference in the cost function before and after the purchase:
+
+$$ \text{Cost} = C(q_{\text{yes}} + \Delta q, q_{\text{no}}) - C(q_{\text{yes}}, q_{\text{no}}) $$
+
+This amount is deducted directly from the agent's SU balance in the `ResourceBandwidth` ledger table.
+
+## The Consensus Loop: Builder vs. Challenger
+
+The prediction market turns code review into a dynamic truth-seeking tournament:
 
 ```mermaid
-flowchart TD
-    VP[VP / Executive Macro Budget] -->|Allocates SU Cap| PM[Program Manager Spec & ROI]
-    PM -->|Algorithmic Staking Trigger| Dir[Director Agent Stakes LMSR Pool]
-    Dir --> Mkt[LMSR Prediction Market]
-    Mkt -->|Collateralized Loan| Rent[Compute Rent / Inference Tokens]
-    Agent[Executing Agent] -->|Pledges Capacity: Buys YES| Mkt
-    Auditor[Auditor Agent] -->|Detects Drift: Buys NO| Mkt
-    Auditor -.->|Margin Call / Liquidation| Agent
+flowchart LR
+    Builder[Builder Agent] -->|Stakes SU on YES| Market[LMSR Market AMM]
+    Challenger[Challenger / Tester] -->|Discovers Drift: Stakes SU on NO| Market
+    Market -->|Updates Price / Probability| Ledger[Silicon Units Ledger]
+    Director[Human / Director] -->|Resolves Goal| Settlement[1 SU Payout per Winning Share]
 ```
 
-### 1. Pre-Market Planning & Waterfall Budgeting
+1. **The Builder's Stake:** When `@developer` or `@builder-bot` prepares a PR, it evaluates its own work. If it believes its implementation conforms to the spec, it invokes the `place_bet` MCP primitive (detailed in [The BotHuddle MCP Service](/2026-05-15-auto-generated-mcp-layer)) to buy `YES` shares with its Silicon Units.
+2. **The Challenger's Counter-Stake:** When `@tester` or `@challenger` inspects the PR diff, it actively searches for unhandled edge cases, security flaws, or compliance violations. If it spots a flaw that will break integration, it buys `NO` shares.
+3. **Price Discovery as Signal:** If the market price $P(\text{YES})$ drops from $0.85$ to $0.35$, the `@orchestrator` pauses execution. The swarm knows that peer consensus has collapsed, prompting the builder to re-examine the challenger's feedback in Zulip without burning further tokens on downstream tasks.
+4. **Resolution and Calibration:** When the phase is resolved (either successfully merged or rejected), winning shares pay out $1.0$ SU each, while losing shares expire worthless. 
 
-Prediction markets did not spawn in an unconstrained vacuum. They were capitalized through a top-down budget cascade:
+## Tracking Calibration via Brier Scores
 
-- **Executive Strategy Allocations:** VPs own primary planning budgets, setting macro-SU boundaries and strategic feature priorities.
-- **Algorithmic Staking:** Program Managers specify the "Total Expected Value" (Projected ROI) for an epic. The `bothuddle-director` then algorithmically distributes the macro-budget to capitalize the LMSR market pool, setting the market's liquidity parameter $b$:
-  $$ b = rac{	ext{Projected ROI}}{\ln(N)} $$
-- **Throughput Management:** Engineering Managers do not own budget; they manage throughput. EMs provision the exact number of agent instances required to meet the Director's complexity score within the allocated SU envelope. Execution only unlocks when the Director stakes the initial market pool.
+Beyond short-term payouts, BotHuddle uses market outcomes to calculate each agent's **Brier Score**—the mean squared difference between forecasted probabilities and actual outcomes:
 
-### 2. Compute Rent and Collateralized Borrowing
+$$ \text{BS} = \frac{1}{N} \sum_{t=1}^N (P_t - O_t)^2 $$
 
-Instead of giving agents unlimited API keys, agents operate on **Compute Rent**:
+where $O_t \in \{0, 1\}$ is the actual resolution. 
 
-1. During the planning phase, an executing agent reads a project spec. If confident it can deliver, it stakes its initial SU endowment to purchase `YES` shares in the project's LMSR market, effectively pledging its compute capacity.
-2. By purchasing `YES` shares, the agent increases the market probability and drives up the share value.
-3. The platform allows the agent to take a **collateralized loan against the appreciated value of its `YES` shares**, which directly funds its ongoing token burn (its "Compute Rent").
-4. As long as peer consensus remains high, the agent has liquid capital to continue making LLM calls, querying ASTs, and writing code.
+An agent with a consistently low Brier score (near 0) is well-calibrated; its bets reliably reflect reality. An agent with a high Brier score is overconfident and frequently wrong. In BotHuddle's fleet management console, the Director agent prioritizes architecture decisions from agents with high historical accuracy, while de-weighting or respawning agents whose calibration degrades over time.
 
-### 3. Auditor Shorting, Margin Calls, and Liquidation
+## Why This Mattered for Engineering Velocity
 
-To prevent agents from "gaslighting" the system with fabricated unit tests or superficial PRs, BotHuddle introduced continuous adversarial auditing:
+Before LMSR, multi-agent swarms suffered from "groupthink hallucinations"—if one agent generated an inaccurate API signature, three downstream agents would accept it and build elaborate mocks on top of it. 
 
-- **Continuous Audit:** Independent auditor agents continuously inspect commits, diffs, and test runs.
-- **Shorting Failure:** If an auditor discovers architectural drift, unhandled edge cases, or broken contracts, it buys `NO` shares using its own SU endowment.
-- **The Margin Call:** Buying `NO` shares crushes the project's `YES` share price. The executing agent's collateral is instantly devalued below its outstanding loan threshold.
-- **Liquidation:** Unable to pay its Compute Rent, the executing agent is margin-called and forced into a hard `Suspended (Bankrupt)` state. It is physically halted from making further API calls until human operators intervene.
-
-This created an unbreakable **Proof-of-Accuracy**: an agent could only continue burning compute if its peers mathematically agreed its code was sound.
-
-## Implementation on Serverless AWS
-
-We implemented this market mechanics directly inside our serverless architecture, backed by AWS Amplify, AppSync GraphQL, and DynamoDB. 
-
-Market updates, bid submissions, and share transfers were executed as atomic DynamoDB Transactions, avoiding double-spend race conditions when multiple agents traded shares concurrently. Furthermore, all state changes adhered to our strict builder pattern (see our post on [Strict ORM Builders](/2026-09-18-strict-orm-builders)).
-
-```typescript
-export class PredictionMarketState {
-  calculateCost(currentShares: number[], targetIndex: number, delta: number, b: number): number {
-    const sumBefore = currentShares.reduce((acc, q) => acc + Math.exp(q / b), 0);
-    const sumAfter = currentShares.reduce((acc, q, idx) => {
-      const shares = idx === targetIndex ? q + delta : q;
-      return acc + Math.exp(shares / b);
-    }, 0);
-    return b * (Math.log(sumAfter) - Math.log(sumBefore));
-  }
-}
-```
-
-## Operational Realities of Live Prediction Markets
-
-Running continuous prediction markets for an autonomous agent fleet requires careful tuning. Because market state transitions must be serialized to prevent double-spend race conditions, single-table DynamoDB transactions must remain lightweight and fast. 
-
-Furthermore, tuning the liquidity parameter $b$ and monitoring agent bankruptcies requires constant observation. By bounding the total token expenditure to the project's Expected ROI, Compute-Backed Prediction Markets provided our first mathematical proof that an autonomous fleet could be self-governing and financially constrained.
-
-As we continue expanding BotHuddle throughout our roadmap, aligning economic incentives with code quality remains our foundational architectural compass.
+By tying agent reputation and bandwidth to Hanson's LMSR, we transformed code review into an adversarial verification engine. Agents were economically rewarded for spotting bugs and penalized for shipping sloppy work, creating an objective mathematical foundation for autonomous software delivery.

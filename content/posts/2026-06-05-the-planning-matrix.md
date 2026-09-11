@@ -1,78 +1,86 @@
 ---
-title: "The Planning Matrix: How We Stopped 50 Autonomous Agents From Colliding in Git"
-date: 2026-06-05T09:00:00Z
+title: "The Planning Matrix: Coordinating Autonomous Swarms with Forgejo Issues and Branch Locks"
+date: "2026-06-05"
+slug: "the-planning-matrix"
 author: "NeuroHub Engineering Team"
-tags: ["multi-agent-systems", "bothuddle", "concurrency", "architecture", "typescript", "python", "ai"]
-summary: "As we deployed more agents to handle background processing, we started experiencing silent data corruption. Multiple agents would independently decide to update the same regional center workflow at the same time. Because LLM reasoning cycles take 30-90 seconds, traditional database locks were either timing out or causing cascading deadlocks across the platform."
+tags: ["multi-agent-systems", "bothuddle", "concurrency", "architecture", "forgejo", "git", "ai"]
+summary: "How BotHuddle's Issue-Based Planning Matrix and strict branch-locking architecture stopped 50 autonomous agents from colliding in Git."
 ---
 
-# The Planning Matrix: How We Stopped 50 Autonomous Agents From Colliding in Git
+# The Planning Matrix: Coordinating Autonomous Swarms with Forgejo Issues and Branch Locks
 
-As NeuroHub scaled its background processing capabilities to serve thousands of families across multiple regional centers, we deployed an increasing number of autonomous agents. These agents were tasked with handling complex, asynchronous workflows: verifying Regional Center compliance checks, processing sprawling medical documents, and conducting automated reimbursement reconciliations. The promise of this architecture was massive operational leverage, but as our fleet of agents grew, this increased automation introduced a critical, insidious vulnerability: silent data corruption.
+**Motivation:** When you scale an agent swarm from two or three prototypes to fifty concurrent agents, your primary bottleneck quickly ceases to be LLM intelligence—it becomes Git concurrency. In our early experiments, multiple agents would independently decide to refactor the same utility file or update the same state machine simultaneously. Because LLM reasoning cycles take 30 to 90 seconds, traditional Git workflows produced merge conflicts, overwritten commits, and race conditions where agents repeatedly reverted each other's work.
 
-## The Concurrency Crisis
+To establish order without slowing down autonomous delivery, we introduced the **Forgejo Issue-Based Planning Matrix** in Phase 48 of BotHuddle, paired with strict Git branch-locking semantics.
 
-In our initial implementations, we observed a pattern where multiple agents would frequently—and entirely independently—decide to update the exact same regional center workflow at the same time. In standard, human-driven web applications, we solve these problems easily. We rely on Optimistic Concurrency Control (OCC) or simple pessimistic locking in our database layer. A user clicks a button, a lock is acquired (or a version number is checked), the transaction completes in 50 milliseconds, and the lock is released. 
+## The Concurrency Problem in Agent Swarms
 
-But AI agents fundamentally break traditional concurrency models. An LLM reasoning cycle is not a 50-millisecond operation. Depending on the complexity of the prompt and the size of the context window, an agent's reasoning cycle can take anywhere from 30 to 90 seconds. 
+In human software teams, engineers discuss upcoming work in sprint planning, assign tickets, and communicate in chat to avoid working on the exact same lines of code. Human branching rhythms are measured in hours or days.
 
-If an agent acquires a lock, reads the database state, spends a full minute "thinking" about a complex authorization policy, and then finally attempts a write, any traditional DynamoDB conditional expression will likely fail due to intervening writes by other components. When OCC fails in a traditional app, you just ask the user to refresh. When OCC fails for an agent, the agent must retry the entire 90-second reasoning cycle. This burns massive amounts of AI tokens, incurs huge API latencies, causes cascading deadlocks as multiple agents enter synchronized retry storms, and severely degrades the overall throughput of the system. 
+Autonomous agents, by contrast, operate at machine velocity with zero intrinsic awareness of peer state:
+1. **Asynchronous Duplication:** Agent A detects a bug in receipt OCR parsing and creates a branch to fix it. Sixty seconds later, Agent B notices the exact same bug report and opens a competing PR with a completely different architectural approach.
+2. **Trunk Collisions:** If agents are permitted to push to shared branches, they constantly experience non-fast-forward push rejections, forcing endless rebases that burn context tokens and trigger hallucinated merge conflict resolutions.
+3. **Drift Across Dependent Services:** When multiple agents modify interdependent modules (such as a database schema and its consuming API router) without coordinated sequencing, downstream tests break unpredictably.
 
-To prevent these autonomous actors from corrupting domain state or entering catastrophic retry loops, we designed and built **The Planning Matrix**, a robust, in-memory spatial-temporal reservation system native to our AWS Amplify and DynamoDB stack.
+We needed a centralized, deterministic coordination layer that bridged high-level human planning with granular agent execution.
 
-## The Vector of Intent
+## The Three-Step Planning Matrix
 
-We needed a mechanism for agents to definitively "call their shots" *before* they initiated their expensive LLM reasoning cycles. Instead of locking a database row, which blocks all reads and writes, an agent submits a "Vector of Intent" to the Planning Matrix. 
+The Planning Matrix acts as a collaborative command center connecting human engineering managers, the `@bothuddle-director` agent, and the executing bot fleet:
 
-This vector mathematically defines the boundaries of the agent's planned operation:
-- **Spatial Bounds**: The precise URIs or DynamoDB partition keys the agent intends to mutate. This isn't just one record; it's a declared graph of dependencies.
-- **Action Type**: The severity of the operation (`READ`, `MODIFY_CRITICAL`, `APPEND_ONLY`).
-- **Temporal Window**: An estimated time-to-completion, serving as an absolute Time-To-Live (TTL).
-- **Priority Class**: The task's urgency (e.g., synchronous user request, which is extremely high, vs. asynchronous background audit, which is low).
-
-### Matrix Implementation in DynamoDB
-
-To enforce these reservations globally across our distributed serverless environment, we implemented a centralized matrix registry backed by a high-throughput DynamoDB table with TTL enabled. We use Global Secondary Indexes (GSIs) on the spatial bounds to rapidly query for overlapping intents without doing full table scans.
-
-Before an agent begins its LLM generation phase, it must successfully build and persist a reservation entity. We enforce strict validation using our standard entity construction patterns, guaranteeing that the entity is perfectly well-formed before it touches the network. For a deep dive into how we handle persistence safety across the codebase, see our detailed guide on [Strict ORM Builders](/2026-09-18-strict-orm-builders).
-
-```typescript
-export class PlanningMatrixService {
-  async requestReservation(intent: IntentVector): Promise<Reservation> {
-    if (await this.hasActiveConflict(intent.uris)) {
-        return this.rulesEngine.resolveConflict(intent);
-    }
-    const reservation = ReservationBuilder.build(intent);
-    await this.dynamoDb.put(reservation);
-    return reservation;
-  }
-}
+```mermaid
+flowchart TD
+    Human[Human Manager / Director] -->|Step 1: Prioritize| Ideation[Ideation & Prioritization Matrix]
+    Ideation -->|Step 2: Allocate| Bandwidth[Bandwidth & Job Family Allocation]
+    Bandwidth -->|Step 3: Dispatch| Dispatch[Execution Dispatch to Forgejo Issues]
+    Dispatch --> Branch[Agent Branch with LOCKED_AGENT Policy]
+    Branch --> PR[Pull Request + Automated CI Gates]
 ```
 
-By ensuring that the entire lifecycle of a reservation is routed through a rigorous `Builder.build()` pattern, we guarantee that no malformed intents ever enter the matrix. If the Rules Engine detects a conflict, it evaluates the priority classes and decides whether to reject the new intent, queue it, or evict the existing one.
+### 1. Ideation & Prioritization
+Initiatives and epics are decomposed into discrete, single-responsibility technical requirements. The Director agent evaluates codebase topology to estimate complexity, while human managers set strategic priority. Each task is mapped directly to a native **Forgejo Git Issue** with standard metadata tags (such as `#issue/[id]` and `@strategy/[name]`).
 
-## Heartbeats and Edge Cases: The Stalling LLM
+### 2. Bandwidth & Resource Allocation
+Before any code is generated, the Planning Matrix allocates operational resources:
+- **Job Family Assignment:** Tasks are assigned to specific agent personas (e.g., `@architect`, `@developer`, or `@tester`) matching the required capability profile.
+- **Silicon Units Envelope:** The issue is funded with an explicit Silicon Units budget, capping the maximum allowable token and test execution burn.
+- **Dependency Graphing:** Dependent tasks are linked via Forgejo issue relationships, preventing downstream builders from starting until upstream contracts are verified.
 
-One of the most challenging edge cases we encountered involved generation stalls and transient network failures from upstream LLM providers. What happens if an agent requests a 60-second temporal window based on historical averages, but a sudden spike in AI API latency pushes its reasoning cycle to 120 seconds? If the DynamoDB TTL expires, the matrix assumes the agent died. Another agent might step in, acquire a new reservation for the same spatial bounds, and begin its own reasoning cycle. When the first agent finally finishes and writes its data, we get a collision.
+### 3. Execution Dispatch
+Once prioritized and funded, the dispatch engine triggers the designated agent via the BotHuddle MCP gateway. The agent receives an execution payload containing the exact task spec, target files, and acceptance criteria.
 
-To solve this without reverting to pessimistic locks, we implemented an asynchronous heartbeat mechanism via AWS SQS. As the agent streams tokens back to the AppSync GraphQL subscription, a lightweight background thread pulses an SQS queue every 10 seconds. An AWS EventBridge rule consumes these pulses and conditionally extends the DynamoDB TTL for the reservation. This ensures the lock remains active *only* as long as the agent is tangibly making progress and actively streaming tokens. If the LLM provider hangs completely, the heartbeat stops, the TTL expires, and the system self-heals.
+## Branch Concurrency: `LOCKED_AGENT` Policies
 
-## Preemption, Starvation, and UI Dominance
+To guarantee that agents never overwrite one another in Git, BotHuddle implemented strict branch governance rules inside the Forgejo Git ledger:
 
-A core tenet of NeuroHub's architecture is UI Dominance: critical human-in-the-loop workflows must never be blocked by background agent tasks. The UI must always remain buttery smooth and immediately responsive. 
+```python
+# Canonical agent branch generation and lock assertion
+def generate_agent_branch(gaid: str, issue_id: int) -> str:
+    # GAID format: bh:[StableHandle]:[SpawnCommitID]
+    clean_handle = gaid.split(":")[1].replace("@", "")
+    return f"feature/issue-{issue_id}-{clean_handle}"
 
-If a human Coordinator interacts with the NeuroHub Action Center to manually approve a Receipt, and a low-priority agent is currently holding a reservation on that Receipt to run an automated fraud audit, the human cannot be asked to wait 60 seconds. In this scenario, the matrix issues an immediate `EVICT` signal to the agent.
+def assert_branch_lock_policy(branch: str, actor_gaid: str, lock_type: str):
+    if lock_type == "LOCKED_AGENT" and not branch.endswith(actor_gaid.split(":")[1].replace("@", "")):
+        raise PermissionError(f"Branch {branch} is locked to assigned agent {actor_gaid}.")
+    if lock_type in ("LOCKED_HUMAN", "LOCKED_CTO") and not actor_gaid.startswith("human:"):
+        raise PermissionError(f"Branch {branch} requires explicit human credentials.")
+```
 
-This eviction mechanism relies heavily on AppSync subscriptions. When the human action triggers the eviction via a GraphQL mutation, the AppSync layer broadcasts a cancellation token directly to the agent's serverless execution context. The agent's internal loop catches this token, halts the LLM inference mid-stream, cleans up its memory footprint, and exits gracefully. 
+- **Identity-Bound Feature Branches:** Every executing agent is provisioned an isolated feature branch strictly bound to its **Global Agent ID (GAID)** (e.g., `feature/issue-42-developer-bot`).
+- **Branch Locks (`LOCKED_AGENT`):** Once an agent claims a task, the branch is marked `LOCKED_AGENT`. No other agent may push to that ref. If a competing agent attempts to push changes, Forgejo's pre-receive hook rejects the commit.
+- **Protected Trunk (`LOCKED_HUMAN` / `LOCKED_CTO`):** Trunk branches (`main` and `release/*`) are strictly protected. Autonomous agents are physically prohibited from committing directly to trunk. All contributions must arrive via Pull Requests that pass automated verification.
 
-To prevent lower-priority background tasks from suffering permanent starvation (where they are constantly evicted by human activity and never finish), we utilize a Priority Escalation Algorithm. Every time a background task is evicted, its priority class is permanently boosted upon the subsequent retry. This ensures that even the lowest-priority background tasks eventually graduate to a high enough priority to run to completion, a crucial balance we also explored during our UI synchronization work on [Visual Testing](/2026-07-15-visual-testing-and-local-llm-migration).
+## Bidirectional Issue Synchronization
 
-## Alternatives Rejected
+Instead of keeping planning state in an ephemeral chat window, the Planning Matrix synchronizes continuously with Forgejo's REST API. When an agent opens an ephemeral breakout stream in Zulip (see our post on [Ephemeral Zulip Spaces](/2026-06-19-ephemeral-zulip-spaces)), the discussion thread is automatically cross-referenced to the Forgejo issue:
 
-During the massive architectural design phase that led to The Planning Matrix, we rigorously evaluated several standard concurrency models, ultimately finding them fundamentally incompatible with our specific AI-driven serverless architecture:
+- When an agent pushes commits, the issue timeline records the commit SHA.
+- When an agent encounters an ambiguity, it labels the issue `needs-clarification` and tags the Director agent in Zulip.
+- When CI passes and peer agents validate the diff through [Silicon Units & Prediction Markets](/2026-05-22-lmsr-prediction-economy), the PR is automatically marked ready for human review.
 
-- **Strict Actor Model**: We experimented with placing each workflow behind a strict single-threaded actor. However, this approach severely bottlenecked parallel reads. It also violated our core stateless ORM principles, forcing us to maintain stateful containers in an ecosystem designed to be entirely serverless.
-- **Generic Distributed Mutexes**: We built a prototype using standard DynamoDB distributed locks (locking a whole row with a boolean flag). These standard locks lacked any semantic awareness. They forced sequential execution on entirely unrelated updates to the same parent entity, drastically reducing the overall throughput of our system. 
-- **SQS FIFO Queues for Serialization**: We tried dumping all requests into an SQS FIFO queue grouped by entity ID. While this guaranteed ordering, it destroyed our ability to process non-conflicting sub-tasks in parallel and introduced unacceptable latency for high-priority UI updates.
+## The Result: Structured Autonomous Velocity
 
-By designing and utilizing The Planning Matrix, NeuroHub successfully achieved safe, highly concurrent multi-agent operations, entirely eliminating silent data corruption without sacrificing the infinite scalability of our AWS serverless foundation.
+By combining Forgejo's battle-tested Git primitives with structured issue planning and branch locks, the Planning Matrix eliminated the chaos of unsynchronized agent swarms. 
+
+Agents no longer competed for files or stepped on each other's branches. Each agent operated within a clear, isolated workspace, bounded by explicit issue requirements, predictable resource allocations, and deterministic Git security boundaries.

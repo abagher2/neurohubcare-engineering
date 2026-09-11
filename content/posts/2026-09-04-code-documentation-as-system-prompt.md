@@ -2,77 +2,73 @@
 title: "Executable Documentation: Turning AGENTS.md Into the Ultimate System Prompt"
 date: "2026-09-04"
 slug: "code-documentation-as-system-prompt"
-summary: "Maintaining high-level structural markdown files to manage a fleet of autonomous developers."
-tags: ["Documentation", "Architecture", "Antigravity"]
+summary: "How NeuroHub uses root-level AGENTS.md files to inject deterministic architectural boundaries into autonomous AI coding agents."
+tags: ["Documentation", "Architecture", "Antigravity", "Best Practices"]
 ---
+
 # Executable Documentation: Turning AGENTS.md Into the Ultimate System Prompt
 
-**Motivation:** As we scaled our use of autonomous AI agents using the Antigravity framework, we hit a wall. Agents were constantly re-inventing the wheel, ignoring established patterns, or blatantly violating our strict architectural guidelines. Why? Because context was scattered across disparate markdown files, Jira tickets, and Slack threads. We were losing hours explaining the exact same NeuroHubCare standards over and over, reverting Pull Requests that were perfectly functional but architecturally disastrous. We needed a way to inextricably link our source code documentation directly into the agents' operational brains.
+**Motivation:** As we scaled our use of autonomous AI coding agents with Google Antigravity, we hit a wall. Agents were constantly re-inventing the wheel, ignoring established folder conventions, or blatantly violating our strict architectural rules. Why? Because context was scattered across disparate wiki pages, Jira tickets, and Slack threads. We were burning hours explaining the exact same NeuroHub standards over and over, reverting Pull Requests that were functional on the surface but architecturally disastrous. We needed a way to bind our core architectural laws directly into the agent's operational execution loop.
 
-Today, documentation is no longer just text for humans to read; it is executable. It is the literal system prompt that dictates the behavior, constraints, and worldview of a fleet of autonomous AI developers. At NeuroHub, root-level markdown files like `AGENTS.md` and `ARCHITECTURE.md` are not suggestions—they are the strict, executable laws of our codebase.
+Today, documentation in our repository is no longer just static text for human onboarding; it is executable. It is the literal system prompt that dictates the constraints, contracts, and worldview of autonomous developers. At NeuroHub, root-level markdown files like `AGENTS.md` and `.agents/AGENTS.md` are not polite suggestions—they are deterministic laws.
 
-## The Theoretical Shift: From Passive Wiki to Active Prompt
+## The Paradigm Shift: From Passive Wiki to Active System Directive
 
-In a traditional engineering organization, an architecture document lives on a Confluence page. A new engineer might read it during onboarding, forget most of it a month later, and rely on code review to correct their mistakes. 
+In traditional engineering, an architecture document lives on a Confluence or Notion page. An engineer reads it during onboarding, forgets half of it a month later, and relies on PR review to catch deviations.
 
-AI agents operate in a hyper-literal, stateless paradigm. They do not have "intuition" or "muscle memory." If a rule is not explicitly in their context window at the exact moment they generate a token, that rule does not exist. By elevating `AGENTS.md` to a system prompt, we inject global context directly into the agent's pre-computation context window before they write a single line of code. 
+AI agents operate in a stateless paradigm. They do not possess "intuition" or "muscle memory." If an architectural constraint is not present in their prompt context at the moment they predict the next token, that constraint simply does not exist for them. By treating `AGENTS.md` as an executable rulebook, the Antigravity framework automatically injects these scoped rules directly into the agent's system instructions before it plans or writes a single line of code.
 
-An executable markdown prompt must be distinct from a human wiki. It must be heavily structured, unambiguous, and parsable by both human engineers and language models. This macroscopic approach sets the global boundaries and is perfectly complemented by our microscopic [Inline Agent Directives](/2026-08-28-directing-agents-with-comments), which enforce rules at the file level.
+These global, repository-wide boundaries are complemented at the file level by our [Inline Agent Directives](/2026-08-28-directing-agents-with-comments), which enforce microscopic invariants directly above complex functions.
 
-## Architecting the `AGENTS.md` File
+## Structuring Repository Laws in `AGENTS.md`
 
-Our `AGENTS.md` file is divided into strict domains. It does not explain *how* to write React; it explains how *NeuroHub* writes React. It explicitly outlaws common patterns that the LLMs might have learned from open-source repositories but that are forbidden in our highly-regulated AWS Amplify environment.
+Our `AGENTS.md` file does not explain how to write standard TypeScript; it explains how *NeuroHub* writes software. It explicitly outlaws common open-source patterns that are forbidden in our high-compliance California Regional Center environment.
 
-### Example: Route-First Component Placement
+### 1. Route-First Component Placement
+Left unprompted, LLMs aggressively extract every button, card, and form step into a generic `src/components/ui` directory, creating a tangled, un-splittable bundle. In `AGENTS.md`, we explicitly outlaw this:
 
-We introduced the "Route-first Component Placement" law in our `AGENTS.md` to combat component sprawl in our Next.js App Router. Left to their own devices, AI agents will aggressively extract every button and form field into a generic `src/components/ui` folder, creating a tangled web of dependencies that makes code splitting impossible.
+*Rule: Do not create a root `src/app/_components` catchall. Next-specific application wiring must use purpose-named private folders such as `_authentication` or `_navigationBar`. Code used by one route belongs in that route's private `_components` folder. `src/components` is limited strictly to domain-neutral primitives.*
 
-In `AGENTS.md`, we explicitly ban this:
-*Rule: Do not create a root `src/app/_components` catchall. Next-specific application wiring must use purpose-named private folders such as `_authentication` or `_navigationBar`. Code used by one route belongs in that route's private `_components` folder.*
+### 2. Client vs. User Boundaries
+In California Regional Center programs (Self-Determination Program and Traditional Services), conflating the child/dependent with the parent account holder corrupts state reporting. Our `AGENTS.md` enforces:
 
-We back up this prompt with deterministic tooling in our CI pipeline:
+*Rule: The "Care Plan" (`/care-plan`) and "Vault" (`/vault`) belong to the Client (the dependent). "Settings" or "Profile" (`/settings`) belongs to the User (the parent or professional). Do not mix child management tasks into the parent's account settings.*
+
+### 3. Entity Construction via Builders
+When an agent handles data returned from AWS AppSync, its natural instinct is to cast the untyped JSON payload: `const receipt = response.data as Receipt`. This breaks type safety and bypasses regulatory validation.
+
+`AGENTS.md` establishes a strict persistence rule:
+*Rule: The only way to construct an immutable Entity is `Builder.build()`. Never use `JSON.parse()` plus a type assertion as a domain parser. Entity constructors remain private or protected.*
 
 ```typescript
-export class RouteFirstConstraintValidator {
-  public validate(ast: Node): string | null {
-    if (ast.hasGenericComponentImport && !ast.isCorePrimitive) {
-      return "Violation: Must use route-private _components folder. Refer to AGENTS.md.";
+// Enforced by AGENTS.md and STATE_MANAGEMENT_DIRECTIVES.md
+export class ReceiptEntity {
+  private constructor(private readonly data: ValidatedReceiptData) {}
+
+  public static Builder = class {
+    private data: Partial<ValidatedReceiptData> = {};
+    
+    public setTotal(amount: number) { this.data.total = amount; return this; }
+    public build(): ReceiptEntity {
+      if (!this.data.total || this.data.total <= 0) {
+        throw new Error("Invalid receipt total");
+      }
+      return new ReceiptEntity(this.data as ValidatedReceiptData);
     }
-    return null;
-  }
+  };
 }
 ```
 
-By explicitly prompting the agent and then immediately verifying the output, we ensure the agentic workflow is bounded by strict architectural realities.
+For an exhaustive examination of why this pattern is essential for eliminating agent hallucinations, see our dedicated guide on [Strict ORM Builders](/2026-09-18-strict-orm-builders).
 
-## Entity Construction via Builders
+## Scoped Context Injection via Rule Directives
 
-Another major section of our `AGENTS.md` dictates how data flows from our backend to our frontend. When an agent creates a new entity from an AWS AppSync response, it must adhere to strict validation. 
+Injecting an entire ten-thousand-word architecture manual into every trivial prompt would saturate the context window and dilute the model's attention.
 
-Left unprompted, an agent will simply take a JSON response from DynamoDB and cast it: `const user = response.data as User`. This destroys type safety. We mandate "Entity Construction via Builders" in our `ARCHITECTURE.md`. As explained deeply in [Building the Compliance Engine](/2026-09-02-building-the-compliance-engine), pure TS rules require pure TS entities, and those entities must be verified at runtime.
+The Antigravity engine solves this by scoping rule evaluation to active file paths and workspaces. When an agent touches files inside `src/app/requests/reimbursements/`, rules governing Action Center conventions, pill filters, and receipt builders are dynamically prioritized. If an agent is working in `src/lib/compliance-engine/`, it receives the strict directives defined in [`AGENT_DIRECTIVES.md`](file:///Users/abagher/Documents/GitHub/red-tape-ninja/src/lib/compliance-engine/AGENT_DIRECTIVES.md), prohibiting runtime AST parsing in favor of pure TypeScript inheritance.
 
-The `AGENTS.md` prompt explicitly instructs:
-*Rule: The only way to construct an immutable Entity is `Builder.build()`. Never use `JSON.parse()` plus a type assertion as a domain parser.*
+## The Result: Autonomous Agents That Respect Invariants
 
-```typescript
-// This pattern is mandated by AGENTS.md
-export class PatientRecordBuilder {
-  private data: Partial<PatientRecord> = {};
-  
-  public build(): PatientRecord {
-    // Validates before returning
-    if (!this.data.mrn) throw new Error("Missing MRN");
-    return new PatientRecord(this.data);
-  }
-}
-```
+By transforming passive documentation into executable system prompts, we stopped playing "whack-a-mole" with agentic PRs. 
 
-## The Agentic Workflow: Retrieval-Augmented Prompting (RAP)
-
-Injecting a 5,000-word `AGENTS.md` file into every single API call would quickly exhaust token limits and dilute the agent's focus. To solve this, we implemented Retrieval-Augmented Prompting (RAP) within the Antigravity orchestrator.
-
-When an agent is assigned a task (e.g., "Fix the reimbursement upload UI"), it executes a pre-flight checklist. The orchestrator analyzes the intent of the prompt and the files the agent plans to touch. It then semantically searches `AGENTS.md` and `ARCHITECTURE.md`, extracting only the relevant laws based on the task domain. 
-
-If the agent is touching UI, it gets the React and Route rules. If it's touching the backend, it gets the DynamoDB and Compliance Engine rules. The agent acknowledges these constraints via a "Chain of Thought" before writing any code.
-
-By treating architectural files as executable system prompts, we enforce architectural rigor at the absolute point of generation. When the AI proposes a change to a DynamoDB query or an EventBridge payload, it is instantly evaluated against the canonical architectural intent. This paradigm shift has transformed our ad-hoc agentic swarms from unpredictable code generators into tightly aligned, highly disciplined engineering teams that inherently respect the boundaries of our complex healthcare platform.
+When an agent proposes changes to a reimbursement flow or updates an authorized service calculation, it does so within the explicit architectural boundaries of our application. `AGENTS.md` turned our codebase from a blank slate into a structured arena where autonomous agents can execute at full velocity without breaking the core system invariants.

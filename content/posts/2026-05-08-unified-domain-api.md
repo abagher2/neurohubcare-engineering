@@ -1,86 +1,73 @@
 ---
 title: "Bridging Git and Chat: Building a Unified Domain API for AI Swarms"
 date: "2026-05-08"
-author: "NeuroHub Engineering"
-tags: ["Architecture", "BotHuddle", "API", "AI Agents", "Forgejo", "Zulip"]
-summary: "As our autonomous agents scaled, we hit a massive integration bottleneck. Our early prototypes relied on agents interacting directly with raw REST endpoints across Forgejo and Zulip. This approach rapidly devolved into a \"spaghetti\" architecture, leading to brittle agent logic, unpredictable state mutations, and a debugging nightmare every time an API contract shifted."
+author: "NeuroHub Engineering Team"
+tags: ["Architecture", "BotHuddle", "API", "AI Agents", "Forgejo", "Zulip", "FastAPI"]
+summary: "Why we stopped exposing raw Forgejo and Zulip REST endpoints to autonomous agents and built a unified FastAPI domain abstraction layer."
 ---
 
 # Bridging Git and Chat: Building a Unified Domain API for AI Swarms
 
-When we first envisioned BotHuddle, our goal was to accelerate development of NeuroHub's core healthcare and financial platform—automating California Regional Center spending plan calculations, FMS invoice reconciliation, and Title 17 receipt reimbursement pipelines. We wanted an environment where an autonomous agent could detect an issue in our Forgejo git ledger, discuss the regulatory implications with a specialized compliance agent in a Zulip stream, and draft a verified patch. The early prototypes were admittedly scrappy: we simply gave agents API keys and instructed them to interact directly with raw REST endpoints across Forgejo and Zulip.
+**Motivation:** In our initial multi-agent prototypes, we gave agents raw REST access to both our Forgejo Git server and our Zulip chat instance. The result was immediate architectural chaos. Agents would spend half their reasoning tokens wrestling with pagination cursors, OAuth header refreshes, and inconsistent JSON payloads. Worse, when an agent wanted to associate a Git commit with a discussion thread, it had to manually correlate unstructured text with commit hashes, frequently hallucinating nonexistent endpoints and corrupting issue metadata.
 
-As our product surface expanded across 21 California Regional Centers, this direct-access approach rapidly devolved into a "spaghetti" architecture. Agents were forced to handle complex, low-level HTTP logic like cursor-based pagination, rate-limiting backoffs, and OAuth token refreshes. More problematically, whenever an API contract shifted slightly in Forgejo or a new webhook parameter was introduced in Zulip, the agents would confidently hallucinate incorrect JSON payloads. This led to unpredictable state mutations in our repositories and chat streams, stalling delivery of critical features like our multi-item reimbursement wizard and spending plan budget tables. We found ourselves spending more time fixing the agents' broken HTTP requests than developing actual product features.
+To solve this integration bottleneck, we built the **Unified Domain API** in Phase 3 of [The 14-Phase Roadmap](/2026-05-01-the-14-phase-roadmap)—a consolidated FastAPI service that unified the Git ledger and the chat communications bus behind a single, strongly-typed schema.
 
-## The Unified Domain API Architecture
+## The Problem: The Dual-Protocol Spaghetti
 
-We quickly realized that exposing the raw surface area of multiple heterogeneous systems directly to Large Language Models was a fundamental anti-pattern. To shield our agents from this underlying complexity and stabilize the integration, we introduced a centralized abstraction layer: The Unified Domain API. Instead of agents speaking raw HTTP to a dozen different services, they communicated exclusively with a single, strongly-typed AWS AppSync GraphQL surface.
+An enterprise hybrid workforce operates across two fundamental systems of record:
+1. **The Asynchronous Ledger (Git/Forgejo):** Where code, pull requests, issues, architecture decision records, and wiki pages live.
+2. **The Synchronous Communications Bus (Zulip):** Where human engineers and agents discuss tradeoffs, stream real-time alerts, and resolve blockers.
 
-By leveraging AWS AppSync, we could stitch together various data sources into a unified, coherent graph. Under the hood, we relied on Amazon DynamoDB for high-throughput state tracking and AWS EventBridge to route webhook events from Zulip and Forgejo into Amazon SQS queues for asynchronous processing. This meant that when an agent queried the API, it wasn't making a live REST call to Forgejo; it was querying a rapidly updated, highly optimized DynamoDB projection of the system's state.
+When agents interact directly with raw, un-abstracted REST APIs across these heterogeneous platforms, three major failure modes occur:
 
-This architecture fundamentally changed the agents' relationship with the infrastructure. AppSync GraphQL provided built-in introspection, meaning the agents could rely on a strict, self-documenting schema rather than hoping their training data contained the correct endpoint structures.
+- **Protocol Impedance Mismatch:** Forgejo uses standard Git REST schemas (repositories, refs, commits, webhooks), while Zulip uses stream-and-topic message schemas. An agent trying to execute a feature had to make multiple interleaved HTTP requests across different ports, leading to partial failures if one call succeeded and the other timed out.
+- **Token Inefficiency:** LLMs are penalized for processing verbose, boilerplate HTTP responses. Raw REST endpoints return deep JSON trees filled with metadata an agent never needs (gravatar URLs, internal timestamps, redundant user objects), consuming precious context window space.
+- **Contract Drift and Hallucinations:** Small discrepancies in parameter names between endpoints caused LLMs to invent imaginary parameters, leading to 400 Bad Request errors and infinite retry loops.
 
-## The Domain Entity Abstraction and `Builder.build()`
+## The Unified Architecture: FastAPI and Pydantic
 
-To ensure agents reasoned about business concepts rather than low-level database rows or raw API responses, we standardized our terminology using Domain-Driven Design (DDD). We realized that terms like "pull request," "issue," or "chat message" were too tied to the specific implementation details of Forgejo and Zulip. We abstracted these concepts into universal entities: `Intentions` (a stated goal), `Proposals` (a suggested code change or action), and `Resolutions` (the final accepted state).
+Instead of allowing agents to speak raw HTTP to Forgejo and Zulip, BotHuddle introduced a centralized gateway API (`gateway-api/routers/unified.py`) powered by FastAPI and Pydantic:
 
-A key part of this abstraction was enforcing absolutely strict entity validation before any data touched our storage layer. We had fully embraced the `Builder.build()` pattern for our ORM layer in our Next.js backend, and we brought this same rigor to the Unified Domain API. Whenever an event arrived—whether it was a webhook from Zulip via SQS or a GraphQL mutation from an agent—our Next.js static backend would parse the payload and pass it through a strict Builder pipeline before writing to DynamoDB.
-
-```typescript
-// Enforcing strict validation before persistence in the Next.js backend
-const proposal = new ProposalBuilder()
-  .setIntent(parsedEvent.intent)
-  .setAuthor(parsedEvent.agentId)
-  .setContext(parsedEvent.contextId)
-  .build(); 
-
-await dynamoDbClient.put({ TableName: "Proposals", Item: proposal });
+```mermaid
+flowchart LR
+    Agent[Autonomous Agent / MCP] -->|Strongly-Typed Domain Calls| Unified[Unified Domain API (FastAPI)]
+    Unified -->|REST / Git Hooks| Forgejo[Forgejo Git Ledger]
+    Unified -->|Zulip Client API| Zulip[Zulip Communications Bus]
+    Unified -->|SQLAlchemy| DB[(PostgreSQL / SQLite Metadata)]
 ```
 
-This pattern ensured that malformed data generated by a hallucinating agent could never pollute our datastore. If an agent tried to submit an invalid proposal—say, missing a required context ID or providing a malformed status string—the AppSync mutation would fail immediately and synchronously. It would return a clear, structured GraphQL error message, allowing the agent to analyze the rejection and self-correct its next attempt. For a much deeper dive into how this pattern saved us from data corruption across our entire stack, check out our dedicated post on [Strict ORM Builders](/2026-09-18-strict-orm-builders).
+Rather than thinking in raw database rows or external HTTP payloads, the Unified Domain API surfaces consolidated domain entities:
+- **`UnifiedProject`:** Connects a Forgejo repository to its corresponding Zulip project streams (`proj-[slug]`), tracking active phases and status.
+- **`UnifiedArtifact`:** Abstracts commits, PR diffs, and wiki documents into standardized markdown structures.
+- **`UnifiedUser`:** Binds an agent's stable Zulip handle (e.g. `@bothuddle.inf.architect`) to its Git committer identity.
 
-## Event Routing, Idempotency, and Failure Modes
-
-Operating a highly concurrent, multi-agent system introduces fascinating and terrifying race conditions. With multiple agents reacting to the same triggers in Zulip—for example, a monitoring alert being posted to a channel—we needed a bulletproof way to prevent duplicate actions. If two agents noticed a failing build at exactly the same time, we couldn't afford for both of them to submit separate, conflicting hotfixes and spawn duplicate review threads.
-
-We used Amazon SQS to buffer incoming webhooks and event triggers. This smoothed out the bursty traffic from Forgejo and Zulip, ensuring our AppSync layer and Next.js handlers weren't overwhelmed during periods of high activity. However, SQS guarantees at-least-once delivery, which means duplicate messages are a reality.
-
-To combat this, strict idempotency was enforced using an `Idempotency-Key` attribute in DynamoDB. This ensured that duplicate webhook deliveries, transient network retries, or concurrent agent actions never resulted in double-execution. We utilized DynamoDB's conditional put operations to guarantee atomicity.
-
-```typescript
-// Idempotency Middleware using DynamoDB conditional puts
-try {
-  await dynamoDbClient.put({
-    TableName: "IdempotencyTokens",
-    Item: { 
-      token: idempotencyKey, 
-      ttl: Math.floor(Date.now() / 1000) + 3600,
-      claimedBy: agentId
-    },
-    ConditionExpression: "attribute_not_exists(token)"
-  });
-} catch (err) {
-  if (err.name === 'ConditionalCheckFailedException') {
-    console.warn(`Idempotency conflict: token ${idempotencyKey} already processed.`);
-    return; // Early return, task already claimed or processed
-  }
-  throw err;
-}
+```python
+# Simplified view from gateway-api/routers/unified.py
+@router.post("/parse_tags", response_model=TagResolutionResponse)
+def parse_smart_tags(req: TagParseRequest, db: Session = Depends(get_db)):
+    """Resolves smart tags (#issue/12, @commit/abc) into concrete Forgejo/Zulip entities."""
+    resolved_issues = resolve_forgejo_issues(req.raw_text, req.repo_id)
+    resolved_commits = resolve_forgejo_commits(req.raw_text, req.repo_id)
+    return TagResolutionResponse(issues=resolved_issues, commits=resolved_commits)
 ```
 
-This simple mechanism became the backbone of our agent coordination. By attempting to claim an idempotency token, agents effectively participated in a distributed lock, preventing the chaotic overlap of tasks that plagued our early prototypes.
+## Smart Tags: Turning Unstructured Chat into Concrete Ledger Objects
 
-## Operational Safeguards: Telemetry and Event Coordination
+A major capability enabled by the Unified Domain API was **Smart Tag Parsing** (`/unified/parse_tags`). In multi-agent conversations, agents naturally mention tickets and revisions in plain text. The API parses standard prefixes:
+- `#issue/[id]` dynamically resolves to the full Forgejo issue object, including its labels, milestone, and open comments.
+- `@commit/[hash]` resolves to the verified Git commit diff, author, and associated tests.
+- `@strategy/[slug]` resolves to the high-level roadmap document in `/.bothuddle/strategies/`.
 
-While the Unified Domain API provided a clean, strongly-typed interface, coordinating an active multi-agent swarm required constant vigilance over event throughput. With multiple agents listening to Zulip streams and reacting to Forgejo PR events, an unthrottled event stream could easily trigger cascading loops of agent mutations.
+By offloading the regex parsing, validation, and database lookups to the Python API layer, agents receive a clean, pre-hydrated JSON object. They no longer need to spend reasoning cycles querying multiple endpoints to find the context behind a commit hash.
 
-To keep the matrix stable, we introduced strict architectural safeguards:
-- **Event Deduplication via SQS**: Every webhook from Forgejo and Zulip passes through an SQS FIFO queue with message deduplication IDs, ensuring that identical webhook retries cannot trigger redundant agent executions.
-- **Circuit Breakers on Mutation Loops**: If the DynamoDB event log records more than three back-and-forth proposals between agents within a sixty-second window without human developer intervention, AppSync automatically flags the thread for human review in Zulip and pauses automated agent replies.
-- **Granular IAM Scoping**: Each agent role operates under a dedicated AWS IAM role mapped to its AppSync auth token, preventing unauthorized access to cross-domain entities.
+## Idempotency and Dual-Commit Coordination
 
-## Looking Ahead: The BotHuddle MCP Service
+When an agent finishes a task, it must record evidence in both systems: post a summary message to Zulip and submit a commit or PR to Forgejo. 
 
-The Unified Domain API fundamentally stabilized how BotHuddle agents interact with our Git ledger and communications bus. By replacing raw, ad-hoc REST calls with a strongly-typed GraphQL schema, strict ORM builders, and idempotent mutation tokens, we eliminated API hallucinations and restored predictability to our autonomous workflows.
+The Unified Domain API provides atomic coordination endpoints like `/unified/dual_commit`. If an agent pushes code to an ephemeral branch, the API automatically generates the Zulip notification linking to the exact Forgejo commit URL, ensuring that the ledger and the communication channel never drift out of sync.
 
-However, having a clean GraphQL API was only part of the solution. We needed a universal mechanism for any organization to interact with this infrastructure through standard primitives, token-based scoping, and role constraints. In our next post, we explore the core protocol that made this possible: [The BotHuddle MCP Service: Standardized Interaction Primitives for Autonomous Swarms](/2026-05-15-auto-generated-mcp-layer).
+## The Foundation for the MCP Layer
+
+The Unified Domain API was an essential prerequisite for our next architectural milestone. Once we had a consolidated, strongly-typed API bridging Git and chat, we didn't have to manually write dozens of custom Model Context Protocol tools. 
+
+Instead, this clean domain surface allowed us to map standard tools directly into the JSON-RPC protocol, as we will explore in our next post on [The BotHuddle MCP Service: Standardized Interaction Primitives for Autonomous Swarms](/2026-05-15-auto-generated-mcp-layer).
