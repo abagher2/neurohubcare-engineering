@@ -5,7 +5,7 @@
     <link>https://blog.neurohubcare.com</link>
     <description>Chronicles of building the AI-native operating system for neurodiversity care.</description>
     <language>en-us</language>
-    <lastBuildDate>Fri, 11 Sep 2026 00:34:43 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 11 Sep 2026 01:19:58 GMT</lastBuildDate>
     <atom:link href="https://blog.neurohubcare.com/rss.xml" rel="self" type="application/rss+xml" />
     
     <item>
@@ -174,7 +174,7 @@
       <link>https://blog.neurohubcare.com/2026-07-03-unified-ui-dashboard</link>
       <guid isPermaLink="true">https://blog.neurohubcare.com/2026-07-03-unified-ui-dashboard</guid>
       <pubDate>Fri, 03 Jul 2026 00:00:00 GMT</pubDate>
-      <description><![CDATA[Providing human operators a single pane of glass into the autonomous fleet with React, WebSockets, and LMSR visualization.]]></description>
+      <description><![CDATA[How BotHuddle's Unified UI Dashboard and Bot Resources Role Registry gave human operators a single pane of glass to govern swarms of 100K+ agents, track prediction markets, and trigger algorithmic fleet respawns.]]></description>
     </item>
     <item>
       <title><![CDATA[Goal-Based Agent Testing]]></title>
@@ -251,7 +251,7 @@
       <link>https://blog.neurohubcare.com/2026-05-22-lmsr-prediction-economy</link>
       <guid isPermaLink="true">https://blog.neurohubcare.com/2026-05-22-lmsr-prediction-economy</guid>
       <pubDate>Fri, 22 May 2026 00:00:00 GMT</pubDate>
-      <description><![CDATA[How BotHuddle paired Robin Hanson's Logarithmic Market Scoring Rule (LMSR) with Silicon Units to mathematically align agent incentives, calibrate confidence, and eliminate hallucination drift.]]></description>
+      <description><![CDATA[How BotHuddle used Robin Hanson's Logarithmic Market Scoring Rule (LMSR), the Bot Resource Management coordination ledger, and algorithmic agent respawning to scale autonomous swarms across 100K+ bots.]]></description>
     </item>
     <item>
       <title><![CDATA[The BotHuddle MCP Service: Standardized Interaction Primitives for Autonomous Swarms]]></title>
@@ -272,7 +272,7 @@
       <link>https://blog.neurohubcare.com/2026-05-01-the-14-phase-roadmap</link>
       <guid isPermaLink="true">https://blog.neurohubcare.com/2026-05-01-the-14-phase-roadmap</guid>
       <pubDate>Fri, 01 May 2026 00:00:00 GMT</pubDate>
-      <description><![CDATA[How we architected BotHuddle as an enterprise Hybrid Workforce OS: featuring a Git-backed Coordination Ledger, prediction-market Bot Resource Management (Silicon Units), and strict bot naming conventions so engineering teams can plan and execute with autonomous swarms.]]></description>
+      <description><![CDATA[How we architected BotHuddle as an enterprise Hybrid Workforce OS: featuring a Git-backed Coordination Ledger, prediction-market Bot Resource Management (Silicon Units), continuous skill assessment, and algorithmic fleet respawning to scale to multi-thousand-person organizations with 100K+ agents.]]></description>
     </item>
     <item>
       <title><![CDATA[The Engineering Mandate: Why We Need Autonomous AI Agents]]></title>
