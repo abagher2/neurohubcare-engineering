@@ -5,9 +5,16 @@
     <link>https://blog.neurohubcare.com</link>
     <description>Chronicles of building the AI-native operating system for neurodiversity care.</description>
     <language>en-us</language>
-    <lastBuildDate>Thu, 10 Sep 2026 23:58:26 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 11 Sep 2026 00:00:04 GMT</lastBuildDate>
     <atom:link href="https://blog.neurohubcare.com/rss.xml" rel="self" type="application/rss+xml" />
     
+    <item>
+      <title><![CDATA[Migrating Policy Engines Autonomously]]></title>
+      <link>https://blog.neurohubcare.com/2026-09-11-migrating-policy-engines</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-09-11-migrating-policy-engines</guid>
+      <pubDate>Fri, 11 Sep 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[Using /teamwork to successfully refactor scattered SDP and SAR rules into a unified Compliance Engine.]]></description>
+    </item>
     <item>
       <title><![CDATA[Combating Terminology Leakage with the Strategy Pattern]]></title>
       <link>https://blog.neurohubcare.com/2026-09-06-the-strategy-pattern-for-terminology</link>
@@ -247,11 +254,11 @@
       <description><![CDATA[How BotHuddle used Compute-Backed Prediction Markets (CBPM) to mathematically align real LLM token costs, LMSR share pricing, and top-down budget planning.]]></description>
     </item>
     <item>
-      <title><![CDATA[Auto-Generating Model Context Protocol (MCP) Surfaces from Live Schemas]]></title>
+      <title><![CDATA[The BotHuddle MCP Service: Standardized Interaction Primitives for Autonomous Swarms]]></title>
       <link>https://blog.neurohubcare.com/2026-05-15-auto-generated-mcp-layer</link>
       <guid isPermaLink="true">https://blog.neurohubcare.com/2026-05-15-auto-generated-mcp-layer</guid>
       <pubDate>Fri, 15 May 2026 00:00:00 GMT</pubDate>
-      <description><![CDATA[The Motivation: As we scaled BotHuddle, our agents were spending way too much context-window memory trying to understand the API surfaces of our internal tools. We needed a way to auto-generate the Model Context Protocol (MCP) layer so the agents could instantly discover and call functions without hallucinating endpoints.]]></description>
+      <description><![CDATA[How we designed the BotHuddle Model Context Protocol (MCP) service to provide standardized interaction primitives, tenant-isolated organization scoping, and role-based capability constraints for autonomous agent swarms.]]></description>
     </item>
     <item>
       <title><![CDATA[Bridging Git and Chat: Building a Unified Domain API for AI Swarms]]></title>

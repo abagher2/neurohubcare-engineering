@@ -84,8 +84,8 @@ We formalized the closed-loop multi-agent prediction economy (`economy.py`). We 
 ### Phase 3: The Unified Domain API
 We built the unified GraphQL and REST abstraction layer bridging our Forgejo Git Ledger (Commits, Issues, Pull Requests) with our Zulip communications bus (Streams, Topics, Users). All entity operations were strictly bound to our immutable `Builder.build()` ORM patterns.
 
-### Phase 4: Auto-Generated Model Context Protocol (MCP) Surfaces
-To eliminate prompt bloat, we built the `huddle-gen` compiler. It parsed our live `HuddleSchema` and automatically synthesized type-safe MCP JSON-RPC tool definitions. Agents discovered and invoked capabilities—such as calculating spending plan allocations or querying regional center service codes—natively without hallucinating endpoints.
+### Phase 4: Standardized MCP Interaction Primitives
+We deployed the dedicated BotHuddle Model Context Protocol (MCP) Service. Rather than bespoke tool wrappers, the MCP service provides universal interaction primitives for any organization: token-based tenant isolation (`org_id`), role-based capability constraints (`@architect` vs `@developer`), and standardized primitives for Zulip messaging, Git state compaction, and evidence submission.
 
 ### Phase 5: The Agent State Machine & Ledger Persistence
 We modeled the agent lifecycle in our single-table DynamoDB architecture:
@@ -133,4 +133,4 @@ The culmination of the roadmap: a single pane of glass for enterprise engineerin
 
 BotHuddle was conceived with a clear enterprise ambition: software development in the AI era cannot rely on isolated, unruly chatbots. It requires a disciplined, mathematically bounded operating system where human engineers and autonomous swarms work with shared context, explicit resource limits, and verifiable accountability.
 
-Over the coming weeks, we will break down each phase of this architecture in detail—beginning with how we bridged Git and Chat in our [Unified Domain API](/2026-05-08-unified-domain-api) and auto-generated our type-safe [MCP Layer](/2026-05-15-auto-generated-mcp-layer).
+Over the coming weeks, we will break down each phase of this architecture in detail—beginning with how we bridged Git and Chat in our [Unified Domain API](/2026-05-08-unified-domain-api) and deployed our enterprise [MCP Service](/2026-05-15-auto-generated-mcp-layer).

@@ -79,8 +79,8 @@ To keep the matrix stable, we introduced strict architectural safeguards:
 - **Circuit Breakers on Mutation Loops**: If the DynamoDB event log records more than three back-and-forth proposals between agents within a sixty-second window without human developer intervention, AppSync automatically flags the thread for human review in Zulip and pauses automated agent replies.
 - **Granular IAM Scoping**: Each agent role operates under a dedicated AWS IAM role mapped to its AppSync auth token, preventing unauthorized access to cross-domain entities.
 
-## Looking Ahead: The Auto-Generated Tooling Layer
+## Looking Ahead: The BotHuddle MCP Service
 
 The Unified Domain API fundamentally stabilized how BotHuddle agents interact with our Git ledger and communications bus. By replacing raw, ad-hoc REST calls with a strongly-typed GraphQL schema, strict ORM builders, and idempotent mutation tokens, we eliminated API hallucinations and restored predictability to our autonomous workflows.
 
-However, having a clean GraphQL API was only half the battle. Agents still spent excessive context tokens formatting GraphQL queries and parsing deeply nested response payloads. In our next post, we will explore how we tackled this problem by automatically synthesizing a Model Context Protocol (MCP) layer directly from our GraphQL schema: [The Auto-Generated MCP Layer](/2026-05-15-auto-generated-mcp-layer).
+However, having a clean GraphQL API was only part of the solution. We needed a universal mechanism for any organization to interact with this infrastructure through standard primitives, token-based scoping, and role constraints. In our next post, we explore the core protocol that made this possible: [The BotHuddle MCP Service: Standardized Interaction Primitives for Autonomous Swarms](/2026-05-15-auto-generated-mcp-layer).
