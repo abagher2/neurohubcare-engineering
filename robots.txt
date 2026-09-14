@@ -1,0 +1,11 @@
+User-Agent: *
+Allow: /
+
+User-Agent: GPTBot
+User-Agent: PerplexityBot
+User-Agent: ClaudeBot
+User-Agent: Applebot-Extended
+User-Agent: Google-Extended
+Allow: /
+
+Sitemap: https://blog.neurohubcare.com/sitemap.xml

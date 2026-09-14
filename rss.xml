@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>NeuroHub Engineering Blog</title>
+    <link>https://blog.neurohubcare.com</link>
+    <description>Chronicles of building the AI-native operating system for neurodiversity care.</description>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 14 Sep 2026 22:07:26 GMT</lastBuildDate>
+    <atom:link href="https://blog.neurohubcare.com/rss.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title><![CDATA[Migrating Policy Engines Autonomously]]></title>
+      <link>https://blog.neurohubcare.com/2026-09-11-migrating-policy-engines</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-09-11-migrating-policy-engines</guid>
+      <pubDate>Fri, 11 Sep 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[Using /teamwork to successfully refactor scattered SDP and SAR rules into a unified Compliance Engine.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Combating Terminology Leakage with the Strategy Pattern]]></title>
+      <link>https://blog.neurohubcare.com/2026-09-06-the-strategy-pattern-for-terminology</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-09-06-the-strategy-pattern-for-terminology</guid>
+      <pubDate>Sun, 06 Sep 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[How we prevent regional healthcare jargon from infecting our UI components by strictly enforcing the Strategy pattern.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Executable Documentation: Turning AGENTS.md Into the Ultimate System Prompt]]></title>
+      <link>https://blog.neurohubcare.com/2026-09-04-code-documentation-as-system-prompt</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-09-04-code-documentation-as-system-prompt</guid>
+      <pubDate>Fri, 04 Sep 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[How NeuroHub uses root-level AGENTS.md files to inject deterministic architectural boundaries into autonomous AI coding agents.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[No Database Rules, No ASTs: Why We Version Healthcare Law in Pure TypeScript]]></title>
+      <link>https://blog.neurohubcare.com/2026-09-02-building-the-compliance-engine</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-09-02-building-the-compliance-engine</guid>
+      <pubDate>Wed, 02 Sep 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[How we translated California Regional Center regulations into a strictly versioned, hierarchical, pure TypeScript rules engine.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Taming the Machine: Directing Autonomous Agents with Inline Comments]]></title>
+      <link>https://blog.neurohubcare.com/2026-08-28-directing-agents-with-comments</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-08-28-directing-agents-with-comments</guid>
+      <pubDate>Fri, 28 Aug 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[We discovered that our AI coding agents were frequently ignoring our global system prompts, especially when working deep within complex files. They would eagerly reinvent patterns or violate architectural boundaries because the global instructions were pushed out of their immediate context window. This resulted in a growing mountain of technical debt and endless refactoring cycles just to undo the AI's 'help.']]></description>
+    </item>
+    <item>
+      <title><![CDATA[The Compliance Auditor Suite: Testing the Rules Engine]]></title>
+      <link>https://blog.neurohubcare.com/2026-08-26-compliance-auditor-testing</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-08-26-compliance-auditor-testing</guid>
+      <pubDate>Wed, 26 Aug 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[Validating the strict business logic of our ComplianceEngine using the compliance-auditor.spec.ts suite.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Breaking the Wizards: The UX Crawler and Fuzzing Engine]]></title>
+      <link>https://blog.neurohubcare.com/2026-08-23-ux-crawler-and-fuzzing</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-08-23-ux-crawler-and-fuzzing</guid>
+      <pubDate>Sun, 23 Aug 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[How we barraged our FocusedWizardLayout with an automated UX Crawler to expose brittle state transitions and combinatorial explosions.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Solving State Resumption: Deep Links in the Compliance UI]]></title>
+      <link>https://blog.neurohubcare.com/2026-08-21-deep-links-resumption-ui</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-08-21-deep-links-resumption-ui</guid>
+      <pubDate>Fri, 21 Aug 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[The Motivation: When an agent-driven workflow encountered a missing piece of data (like a missing provider tax ID), it would just fail. We needed a resumption UI where the agent could pause, send a deep link to the user, and immediately resume execution once the user filled out the form.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Benchmarking Ninja Mode: Speed over Conversation]]></title>
+      <link>https://blog.neurohubcare.com/2026-08-19-ninja-mode-benchmarking</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-08-19-ninja-mode-benchmarking</guid>
+      <pubDate>Wed, 19 Aug 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[An exhaustive technical deep-dive into the architectural shifts, benchmarking strategies, and testing paradigms required to guarantee our AI executes commands instantly without conversational fluff.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Testing the Copilot: Goal-Judge Evaluations for the AI Assistant]]></title>
+      <link>https://blog.neurohubcare.com/2026-08-16-evaluating-the-ai-assistant</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-08-16-evaluating-the-ai-assistant</guid>
+      <pubDate>Sun, 16 Aug 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[How we use Playwright and an LLM-as-a-Judge to evaluate whether our AI Assistant actually resolves user goals.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Taming the Beast: Invoice Batching with Immutable Builders]]></title>
+      <link>https://blog.neurohubcare.com/2026-08-14-invoice-batching-challenge</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-08-14-invoice-batching-challenge</guid>
+      <pubDate>Fri, 14 Aug 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[Motivation: Invoicing is the lifeblood of the Self-Determination Program, but our initial implementation couldn't handle the sheer volume and complexity of batched submissions. Regional centers were rejecting invoices due to micro-discrepancies, and the manual reconciliation was crushing our support team. We needed a bulletproof, automated batching engine.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[The Telemetry Judge: Hooking Local LLMs to AppSync GraphQL]]></title>
+      <link>https://blog.neurohubcare.com/2026-08-12-telemetry-judge-and-appsync</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-08-12-telemetry-judge-and-appsync</guid>
+      <pubDate>Wed, 12 Aug 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[How we wired our LLM Judge directly into AWS AppSync to autonomously monitor and diagnose real-time UI crash events.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Encoding Domain Law: Strict Rubrics for the LLM Judge]]></title>
+      <link>https://blog.neurohubcare.com/2026-08-10-llm-judge-rubrics-for-sdp</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-08-10-llm-judge-rubrics-for-sdp</guid>
+      <pubDate>Mon, 10 Aug 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[How we encode real-world California Regional Center laws into the LLM Judge's grading rubric for autonomous validation.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[The 190K Bloat: When Cross-Cutting Concerns Break Down]]></title>
+      <link>https://blog.neurohubcare.com/2026-08-07-cross-cutting-concerns</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-08-07-cross-cutting-concerns</guid>
+      <pubDate>Fri, 07 Aug 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[As our codebase ballooned to 190,000 lines, the tight coupling of cross-cutting concerns like authentication and telemetry created a maintenance nightmare. Memory leaks from massive span generation and broken authorization boundaries were causing production incidents. We had to step back and completely overhaul our architectural approach to state management.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Adversarial Fuzzing: Detecting DOM Contradictions in Client-Side State]]></title>
+      <link>https://blog.neurohubcare.com/2026-08-05-adversarial-fuzzing-level-9</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-08-05-adversarial-fuzzing-level-9</guid>
+      <pubDate>Wed, 05 Aug 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[How our automated Playwright UX crawler and fuzzer catches unstringified objects, template leakage, and client-side crashes using strict DOM contradiction detection.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[The Return of the God Component: What Happens When AI Agents Write 190k Lines of React]]></title>
+      <link>https://blog.neurohubcare.com/2026-07-31-god-components-return</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-07-31-god-components-return</guid>
+      <pubDate>Fri, 31 Jul 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[In a desperate attempt to consolidate the 190k lines of agent-generated code, we accidentally resurrected the ultimate anti-pattern: brittle God Components.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[The 190,000-Line Balloon: The Terrifying Velocity of Autonomous Code Generation]]></title>
+      <link>https://blog.neurohubcare.com/2026-07-24-the-190k-line-balloon</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-07-24-the-190k-line-balloon</guid>
+      <pubDate>Fri, 24 Jul 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[How unconstrained autonomous agents ballooned our Next.js codebase to 190,000 lines of code in just three weeks.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[The 'Assistant Processed' Trap: Real Bugs Caught by our LLM Judge]]></title>
+      <link>https://blog.neurohubcare.com/2026-07-20-the-bugs-we-caught-with-visual-telemetry</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-07-20-the-bugs-we-caught-with-visual-telemetry</guid>
+      <pubDate>Mon, 20 Jul 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[A look back at the most interesting, terrifying, and hilarious bugs our AI agents wrote, and how the Local LLM judge caught them.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Life After BotHuddle: The Wild West of /teamwork]]></title>
+      <link>https://blog.neurohubcare.com/2026-07-17-life-after-bothuddle</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-07-17-life-after-bothuddle</guid>
+      <pubDate>Fri, 17 Jul 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[Adopting the /teamwork slash command unleashed incredible speed, but removing strict governance opened Pandora's Box.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[The $100/Day CI Bill: Migrating Visual Testing to Local LLMs (And Why We Didn't Crop)]]></title>
+      <link>https://blog.neurohubcare.com/2026-07-15-visual-testing-and-local-llm-migration</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-07-15-visual-testing-and-local-llm-migration</guid>
+      <pubDate>Wed, 15 Jul 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[How our multimodal testing suite cost us $100 a day in Gemini API fees, and how we built a serialized LLM queue to run full-page inference locally.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[The Pivot: Why We Paused BotHuddle]]></title>
+      <link>https://blog.neurohubcare.com/2026-07-10-the-pivot</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-07-10-the-pivot</guid>
+      <pubDate>Fri, 10 Jul 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[BotHuddle worked remarkably well—far better than other multi-agent tools. But the flat fixed cost of running the non-AI infrastructure 24/7 was too high for a lean team. We paused it until our organization grows, focusing our energy on our core healthcare product.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Enforcing UI Supremacy: Visual Regression via Gemini]]></title>
+      <link>https://blog.neurohubcare.com/2026-07-09-visual-regression-with-gemini</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-07-09-visual-regression-with-gemini</guid>
+      <pubDate>Thu, 09 Jul 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[Using Gemini Vision to enforce our strict Glassmorphism and typographic design guidelines against autonomous UI changes.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Multi-Modal Telemetry: Giving Agents Eyes in CI]]></title>
+      <link>https://blog.neurohubcare.com/2026-07-07-multi-modal-telemetry</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-07-07-multi-modal-telemetry</guid>
+      <pubDate>Tue, 07 Jul 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[Serializing the DOM and capturing raw video streams via Chrome DevTools Protocol (CDP) so AI agents can 'watch' failing tests.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[The Unified UI Dashboard: A Single Pane of Glass for Autonomous Fleets]]></title>
+      <link>https://blog.neurohubcare.com/2026-07-03-unified-ui-dashboard</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-07-03-unified-ui-dashboard</guid>
+      <pubDate>Fri, 03 Jul 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[How BotHuddle's Unified UI Dashboard and Bot Resources Role Registry gave human operators a single pane of glass to govern swarms of 100K+ agents, track prediction markets, and trigger algorithmic fleet respawns.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Goal-Based Agent Testing]]></title>
+      <link>https://blog.neurohubcare.com/2026-07-02-goal-based-agent-testing</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-07-02-goal-based-agent-testing</guid>
+      <pubDate>Thu, 02 Jul 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[Testing the AI itself: How we evaluate agent reasoning using isolated, simulated environments.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Combating Agent Hallucinations: Why Playwright Flaked on Generative UI]]></title>
+      <link>https://blog.neurohubcare.com/2026-06-30-why-playwright-flaked</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-06-30-why-playwright-flaked</guid>
+      <pubDate>Tue, 30 Jun 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[How traditional Playwright assertions break on non-deterministic AI interfaces, and the custom fixtures we built to combat rogue agent coding.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Zero-Human Rollbacks: When the LLM Judge Flags a Critical UI Regression]]></title>
+      <link>https://blog.neurohubcare.com/2026-06-28-autonomous-rollbacks</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-06-28-autonomous-rollbacks</guid>
+      <pubDate>Sun, 28 Jun 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[How our CI pipeline autonomously reverts Git commits when the LLM Judge detects a severe AI hallucination.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[The Semantic Discovery Engine: Searching Across Commits and Chat with pgvector]]></title>
+      <link>https://blog.neurohubcare.com/2026-06-26-semantic-discovery-engine</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-06-26-semantic-discovery-engine</guid>
+      <pubDate>Fri, 26 Jun 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[How BotHuddle used PostgreSQL and pgvector to power the discover_space MCP tool, enabling agents to navigate Git commits and Zulip discussions semantically.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Beyond String Assertions: Running an LLM-as-a-Judge Directly in CI]]></title>
+      <link>https://blog.neurohubcare.com/2026-06-24-llm-as-a-judge-in-ci</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-06-24-llm-as-a-judge-in-ci</guid>
+      <pubDate>Wed, 24 Jun 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[Our CI pipeline was failing over 40% of the time, not because of bugs, but because our autonomous UI agents were constantly tweaking layouts and copy. Traditional E2E tests rely on brittle, exact-match DOM assertions. When an agent changed a button from "Submit Form" to "Complete Workflow", our tests would break, requiring hours of manual fixing by engineers and stalling our deployments.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[The Persona Matrix: Enforcing Native RBAC in Autonomous CI]]></title>
+      <link>https://blog.neurohubcare.com/2026-06-21-ci-persona-validation</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-06-21-ci-persona-validation</guid>
+      <pubDate>Sun, 21 Jun 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[Why we prohibited mocked authentication in our autonomous testing pipeline and built real Cognito persona fixtures to validate Role-Based Access Control end-to-end.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Ephemeral Workspaces: Why We Give AI Agents 7-Day Disposable Chat Streams]]></title>
+      <link>https://blog.neurohubcare.com/2026-06-19-ephemeral-zulip-spaces</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-06-19-ephemeral-zulip-spaces</guid>
+      <pubDate>Fri, 19 Jun 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[How BotHuddle's 7-day auto-archiving ephemeral Zulip spaces prevented context window pollution and distilled autonomous debates into the Git Coordination Ledger.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Why UUIDs Break AI Agents: Designing the Global Agent ID (GAID)]]></title>
+      <link>https://blog.neurohubcare.com/2026-06-12-semantic-identity-gaid</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-06-12-semantic-identity-gaid</guid>
+      <pubDate>Fri, 12 Jun 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[How BotHuddle's Global Agent ID (GAID) bound Zulip handles to Git commit lineages and enforced Task-Context-Constraint (TCC) security across enterprise swarms.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[The Planning Matrix: Coordinating Autonomous Swarms with Forgejo Issues and Branch Locks]]></title>
+      <link>https://blog.neurohubcare.com/2026-06-05-the-planning-matrix</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-06-05-the-planning-matrix</guid>
+      <pubDate>Fri, 05 Jun 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[How BotHuddle's Issue-Based Planning Matrix and strict branch-locking architecture stopped 50 autonomous agents from colliding in Git.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[The 1-Second Context Boundary: High-Velocity Polling for Agent Swarms]]></title>
+      <link>https://blog.neurohubcare.com/2026-05-29-1-second-mcp-pull</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-05-29-1-second-mcp-pull</guid>
+      <pubDate>Fri, 29 May 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[How BotHuddle's 1-second MCP pull protocol and targeted mention-polling primitive enabled high-velocity communication across swarms of agents without DDOS'ing our chat infrastructure.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Silicon Units & Prediction Markets: Calibrating Autonomous Swarms with LMSR]]></title>
+      <link>https://blog.neurohubcare.com/2026-05-22-lmsr-prediction-economy</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-05-22-lmsr-prediction-economy</guid>
+      <pubDate>Fri, 22 May 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[How BotHuddle used Robin Hanson's Logarithmic Market Scoring Rule (LMSR), the Bot Resource Management coordination ledger, and algorithmic agent respawning to scale autonomous swarms across 100K+ bots.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[The BotHuddle MCP Service: Standardized Interaction Primitives for Autonomous Swarms]]></title>
+      <link>https://blog.neurohubcare.com/2026-05-15-auto-generated-mcp-layer</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-05-15-auto-generated-mcp-layer</guid>
+      <pubDate>Fri, 15 May 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[How we designed the BotHuddle Model Context Protocol (MCP) service to provide standardized interaction primitives, tenant-isolated organization scoping, and role-based capability constraints for autonomous agent swarms.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[Bridging Git and Chat: Building a Unified Domain API for AI Swarms]]></title>
+      <link>https://blog.neurohubcare.com/2026-05-08-unified-domain-api</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-05-08-unified-domain-api</guid>
+      <pubDate>Fri, 08 May 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[Why we stopped exposing raw Forgejo and Zulip REST endpoints to autonomous agents and built a unified FastAPI domain abstraction layer.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[The 14-Phase Roadmap for BotHuddle: Orchestrating Enterprise Swarms Across Git and Chat]]></title>
+      <link>https://blog.neurohubcare.com/2026-05-01-the-14-phase-roadmap</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-05-01-the-14-phase-roadmap</guid>
+      <pubDate>Fri, 01 May 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[How we architected BotHuddle as an enterprise Hybrid Workforce OS: featuring a Git-backed Coordination Ledger, prediction-market Bot Resource Management (Silicon Units), continuous skill assessment, and algorithmic fleet respawning to scale to multi-thousand-person organizations with 100K+ agents.]]></description>
+    </item>
+    <item>
+      <title><![CDATA[The Engineering Mandate: Why We Need an Enterprise Hybrid Workforce OS]]></title>
+      <link>https://blog.neurohubcare.com/2026-04-28-the-engineering-mandate</link>
+      <guid isPermaLink="true">https://blog.neurohubcare.com/2026-04-28-the-engineering-mandate</guid>
+      <pubDate>Tue, 28 Apr 2026 00:00:00 GMT</pubDate>
+      <description><![CDATA[Building NeuroHub manually would take years of navigating complex California regulations. Here is why we designed BotHuddle—an enterprise Hybrid Workforce OS built to govern swarms of 100K+ autonomous agents.]]></description>
+    </item>
+  </channel>
+</rss>
