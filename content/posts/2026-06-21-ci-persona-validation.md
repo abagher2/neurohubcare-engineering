@@ -72,7 +72,7 @@ If an agent accidentally introduces a bug where `alice` attempts to query `bob`'
 
 Forcing native authentication also protects our data hydration pipeline. In NeuroHub, the frontend does not render raw API responses directly. The only way to construct an immutable Entity from AppSync data is via the `Builder.build()` pattern.
 
-When AppSync returns field-level authorization restrictions or partial payloads, the data must pass through schema validation before it can be instantiated as a UI component. If an unauthorized payload attempts to render, the builder throws an observable error, alerting the developer or agent immediately. For a comprehensive analysis of this pattern, see our post on [Strict ORM Builders](/2026-09-18-strict-orm-builders).
+When AppSync returns field-level authorization restrictions or partial payloads, the data must pass through schema validation before it can be instantiated as a UI component. If an unauthorized payload attempts to render, the builder throws an observable error, alerting the developer or agent immediately. This pattern guarantees that neither agents nor junior developers can bypass domain invariants or mutate state without passing through schema validation.
 
 ## Closing the Loop for Autonomous Quality
 

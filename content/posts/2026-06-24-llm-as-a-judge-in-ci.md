@@ -13,7 +13,7 @@ Traditional End-to-End (E2E) testing with frameworks like Playwright relies heav
 
 ## The Flaw of Deterministic UI Testing
 
-Our tech stack at NeuroHub—a statically exported Next.js frontend communicating with AWS AppSync and DynamoDB—allows us to iterate incredibly fast on the presentation layer. The backend data structures are rigidly enforced (as detailed in our [Strict ORM Builders](/2026-09-18-strict-orm-builders) post), but the frontend UI is highly fluid.
+Our tech stack at NeuroHub—a statically exported Next.js frontend communicating with AWS AppSync and DynamoDB—allows us to iterate incredibly fast on the presentation layer. The backend data structures are rigidly enforced (through strict domain builder contracts), but the frontend UI is highly fluid.
 
 As we accelerated the deployment of our autonomous agents, the speed of UI iteration skyrocketed. Agents were constantly A/B testing copy, improving accessibility labels, and optimizing complex user flows based on feedback loops. 
 

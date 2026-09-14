@@ -19,11 +19,10 @@ export interface Post extends PostMeta {
 }
 
 export function isPostPublished(dateInput: string | Date | undefined): boolean {
-  // Always show future posts on localhost development or if explicitly requested
-  if (process.env.NODE_ENV === 'development' || process.env.SHOW_FUTURE_POSTS === 'true') {
+  if (process.env.SHOW_FUTURE_POSTS === 'true') {
     return true;
   }
-  if (!dateInput) return true;
+  if (!dateInput) return false;
 
   try {
     let dateStr = '';
@@ -35,7 +34,7 @@ export function isPostPublished(dateInput: string | Date | undefined): boolean {
     const today = new Date().toISOString().split('T')[0];
     return dateStr <= today;
   } catch {
-    return true;
+    return false;
   }
 }
 

@@ -28,7 +28,7 @@ function processUserData(data: any) {
 }
 ```
 
-Instead of using the established `Builder.build()` pattern, they reinvented runtime type checking inline. They hallucinated complex Zod schemas and embedded them directly into the UI layer. They wrote custom parsing logic to verify that strings were not empty, numbers were positive, and nested objects existed, completely unaware that AppSync's GraphQL schema enforces these constraints natively at the network boundary. This not only bloated the codebase immensely but bypassed the centralized compliance rules entirely. For a deep dive into how we reigned this specific behavior in and enforced the correct architectural patterns, read about our [Strict ORM Builders](/2026-09-18-strict-orm-builders).
+Instead of using the established `Builder.build()` pattern, they reinvented runtime type checking inline. They hallucinated complex Zod schemas and embedded them directly into the UI layer. They wrote custom parsing logic to verify that strings were not empty, numbers were positive, and nested objects existed, completely unaware that AppSync's GraphQL schema enforces these constraints natively at the network boundary. This not only bloated the codebase immensely but bypassed the centralized compliance rules entirely. We eventually solved this by mandating strict ORM `Builder.build()` boundaries and centralized architectural directives across the entire codebase.
 
 ### 2. The "Copy-Paste-Mutate" Pattern
 

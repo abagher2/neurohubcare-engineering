@@ -32,7 +32,7 @@ flowchart LR
 
 ## Anatomy of the Adversarial Fuzzer
 
-Our automated fuzzer ([`tests/e2e/fuzzer.spec.ts`](file:///Users/abagher/Documents/GitHub/red-tape-ninja/tests/e2e/fuzzer.spec.ts)) crawls active dynamic routes, injecting unexpected payloads, boundary conditions, and malformed query strings into the browser:
+Our automated fuzzer (`tests/e2e/fuzzer.spec.ts`) crawls active dynamic routes, injecting unexpected payloads, boundary conditions, and malformed query strings into the browser:
 
 ```typescript
 // DOM contradiction detection in Playwright test suite
@@ -64,6 +64,6 @@ To ensure the fuzzer accurately mirrors production conditions, the test runner d
 
 Adversarial fuzzing has become one of our most effective quality gates. It acts as an automated backstop against the tendency of AI coding assistants to take shortcuts. 
 
-Whenever an agent attempts to cast an untyped JSON payload without passing it through our mandatory [Strict ORM Builders](/2026-09-18-strict-orm-builders) or skips error handling in a route component, the fuzzer catches the resulting DOM contradiction in CI and halts the build. 
+Whenever an agent attempts to cast an untyped JSON payload without passing it through our mandatory ORM builder pipelines or skips error handling in a route component, the fuzzer catches the resulting DOM contradiction in CI and halts the build. 
 
 By enforcing an absolute rule of **Zero DOM Contradictions**, we guarantee that our desktop-class SaaS interface remains clean, predictable, and trustworthy for the families who rely on it daily.

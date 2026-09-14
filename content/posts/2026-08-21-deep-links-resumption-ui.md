@@ -54,7 +54,7 @@ This approach significantly reduced our support tickets related to "lost work." 
 
 Of course, moving state to the URL introduced a new problem: users could manually manipulate the URL to skip critical compliance steps. A malicious or confused user might change `/step-1` to `/step-5` without uploading the required legal documents. 
 
-To prevent writing bespoke guard clauses for every single workflow, we abstracted this logic into a centralized `WorkflowEngine` running on the client, backed by strict server-side validation. It evaluates the current DynamoDB record state and calculates the next valid URL. We enforce strict data integrity through [Strict ORM Builders](/2026-09-18-strict-orm-builders), ensuring no workflow step can be visited if its prerequisite data is missing.
+To prevent writing bespoke guard clauses for every single workflow, we abstracted this logic into a centralized `WorkflowEngine` running on the client, backed by strict server-side validation. It evaluates the current DynamoDB record state and calculates the next valid URL. We enforce strict data integrity through domain entity builders, ensuring no workflow step can be visited if its prerequisite data is missing.
 
 ```typescript
 export const resolveWorkflowPath = (workflow: PersistedWorkflow): string => {

@@ -52,7 +52,7 @@ export const GoalTracker = () => { /* ... */ }
 
 One of the most dangerous hallucinations occurred around data instantiation. When fetching complex payloads from DynamoDB via AppSync, agents repeatedly tried to bypass our validation layers by directly casting JSON with `as PatientRecord` or directly instantiating raw objects. 
 
-As detailed in our post on [Strict ORM Builders](/2026-09-18-strict-orm-builders), this hallucination is fatal to data integrity in healthcare. If an agent hallucinates a field, it silently poisons the domain logic.
+This hallucination is fatal to data integrity in healthcare. If an agent hallucinates a field, it silently poisons the domain logic.
 
 We placed directives directly on the class definitions to stop this behavior at the source.
 

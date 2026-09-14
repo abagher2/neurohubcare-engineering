@@ -75,7 +75,7 @@ This strict abstraction prevents AI agents from hardcoding document nouns, local
 
 ## Enforcing Purity at the ORM Layer
 
-This strategy extends far beyond just React components. It goes all the way down to our DynamoDB models and our AWS AppSync schemas. As detailed in our post on [Strict ORM Builders](/2026-09-18-strict-orm-builders), we don't allow the database layer to care about terminology either. 
+This strategy extends far beyond just React components. It goes all the way down to our DynamoDB models and our AWS AppSync schemas. We don't allow the database layer to care about terminology either, enforcing strict domain isolation. 
 
 The backend stores generic entities. The DynamoDB table is called `CarePlans`, not `IPPs` or `PCPs`. The AppSync GraphQL API returns a `CarePlan` object. The backend operates entirely on abstract domain primitives. It is only at the very final layer—the Strategy hydration layer—that these abstract primitives are translated into the region-specific UI terms that the user actually sees.
 

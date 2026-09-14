@@ -59,13 +59,13 @@ export class ReceiptEntity {
 }
 ```
 
-For an exhaustive examination of why this pattern is essential for eliminating agent hallucinations, see our dedicated guide on [Strict ORM Builders](/2026-09-18-strict-orm-builders).
+This pattern is essential for eliminating agent hallucinations by enforcing compile-time boundaries on all persisted entities.
 
 ## Scoped Context Injection via Rule Directives
 
 Injecting an entire ten-thousand-word architecture manual into every trivial prompt would saturate the context window and dilute the model's attention.
 
-The Antigravity engine solves this by scoping rule evaluation to active file paths and workspaces. When an agent touches files inside `src/app/requests/reimbursements/`, rules governing Action Center conventions, pill filters, and receipt builders are dynamically prioritized. If an agent is working in `src/lib/compliance-engine/`, it receives the strict directives defined in [`AGENT_DIRECTIVES.md`](file:///Users/abagher/Documents/GitHub/red-tape-ninja/src/lib/compliance-engine/AGENT_DIRECTIVES.md), prohibiting runtime AST parsing in favor of pure TypeScript inheritance.
+The Antigravity engine solves this by scoping rule evaluation to active file paths and workspaces. When an agent touches files inside `src/app/requests/reimbursements/`, rules governing Action Center conventions, pill filters, and receipt builders are dynamically prioritized. If an agent is working in `src/lib/compliance-engine/`, it receives the strict directives defined in `AGENT_DIRECTIVES.md`, prohibiting runtime AST parsing in favor of pure TypeScript inheritance.
 
 ## The Result: Autonomous Agents That Respect Invariants
 

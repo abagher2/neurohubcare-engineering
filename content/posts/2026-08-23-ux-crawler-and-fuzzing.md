@@ -36,7 +36,7 @@ Our solution involves three main components working in tandem during our CI pipe
 
 ## Deep Dive: The Fuzzing Engine
 
-The Fuzzer is designed to break the fundamental assumptions of our backend. It injects mutated, highly randomized payloads directly into the AWS AppSync mutations that instantiate the wizards. We purposely violate our [Strict ORM Builders](/2026-09-18-strict-orm-builders) constraints on the backend to see how the frontend handles malformed data.
+The Fuzzer is designed to break the fundamental assumptions of our backend. It injects mutated, highly randomized payloads directly into the AWS AppSync mutations that instantiate the wizards. We purposely violate our strict entity builder constraints on the backend to see how the frontend handles malformed data.
 
 ```typescript
 export class BuilderMutator {

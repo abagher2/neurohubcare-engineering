@@ -19,7 +19,7 @@ As detailed in our deep dive on [Building the Compliance Engine](/2026-09-02-bui
 
 ## Core Architecture: The Builder Pattern and Immutable State
 
-The `compliance-auditor.spec.ts` suite interacts strictly with immutable Domain Entities constructed via the `Builder.build()` method. We heavily enforce [Strict ORM Builders](/2026-09-18-strict-orm-builders) to ensure no malformed data can even be passed into the rules engine for evaluation.
+The `compliance-auditor.spec.ts` suite interacts strictly with immutable Domain Entities constructed via the `Builder.build()` method. We heavily enforce strict domain builders to ensure no malformed data can even be passed into the rules engine for evaluation.
 
 When writing tests for complex financial compliance, mutability is the enemy. If a test accidentally modifies an entity midway through an evaluation, the results are fundamentally untrustworthy.
 
