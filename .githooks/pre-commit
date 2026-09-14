@@ -1,0 +1,20 @@
+#!/bin/sh
+set -e
+
+echo "🔨 [pre-commit] Generating static HTML and RSS feed (npm run build)..."
+
+# Ensure CNAME and .nojekyll exist in public/
+if [ ! -f public/CNAME ]; then
+  echo "blog.neurohubcare.com" > public/CNAME
+fi
+touch public/.nojekyll
+
+# Generate RSS and build static Next.js export into out/
+npm run build
+
+# If public/rss.xml or public/.nojekyll were modified, stage them
+if git status --porcelain public/rss.xml public/.nojekyll | grep -q .; then
+  git add public/rss.xml public/.nojekyll
+fi
+
+echo "✅ [pre-commit] Static HTML export and RSS generated successfully in out/."

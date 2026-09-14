@@ -5,6 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "node scripts/generate-rss.js && next build",
+    "gh-deploy": "gh-pages -d out -b gh-pages --dotfiles -m 'Deploy website [skip ci]'",
+    "deploy": "npm run gh-deploy",
+    "prepare": "git config core.hooksPath .githooks || true",
     "start": "next start",
     "lint": "eslint",
     "preview": "npx --yes serve out"
@@ -28,6 +31,7 @@
     "@types/react-syntax-highlighter": "^15.5.13",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
+    "gh-pages": "^6.3.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
