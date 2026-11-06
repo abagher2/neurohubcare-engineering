@@ -192,7 +192,17 @@ export default async function PostPage(props: PageProps) {
           }}>
             <Layers size={20} style={{ color: 'var(--primary, #6366f1)', flexShrink: 0, marginTop: '0.2rem' }} />
             <div>
-              <strong style={{ color: 'var(--slate-900, #0f172a)' }}>Series Context:</strong> NeuroHub Engineering chronicles our journey building the first AI-native operating system for neurodiversity care. This post is part of a deep-dive series exploring our technical challenges scaling an autonomous multi-agent orchestration framework (BotHuddle) to write and test production React code.
+              {(post.tags || []).some((t) =>
+                ['regional center', 'sdp', 'care navigation', 'product launch', 'ga release', 'reimbursements', 'fms'].includes(t.toLowerCase())
+              ) ? (
+                <>
+                  <strong style={{ color: 'var(--slate-900, #0f172a)' }}>About NeuroHub:</strong> NeuroHub provides practical information, organization, and compliance support for families, Independent Facilitators, and providers navigating California&apos;s Regional Center system and Self-Determination Program (SDP)—turning months of bumpy bureaucracy into structured, audit-ready workflows.
+                </>
+              ) : (
+                <>
+                  <strong style={{ color: 'var(--slate-900, #0f172a)' }}>Series Context:</strong> NeuroHub Engineering chronicles our journey building the first AI-native operating system for neurodiversity care. This post is part of a deep-dive series exploring our technical challenges scaling an autonomous multi-agent orchestration framework and deterministic compliance architecture.
+                </>
+              )}
             </div>
           </div>
           
