@@ -1,4 +1,4 @@
-:HL["/_next/static/chunks/1lvyic1yy9_mf.css","style"]
+:HL["/_next/static/chunks/12y-e_9e6l3e8.css","style"]
 :HL["/_next/static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/_next/static/chunks/100ls0qnc6cq4.css","style"]
-0:{"tree":{"name":"","param":null,"prefetchHints":4112,"slots":{"children":{"name":"slug","param":{"type":"d","key":"2026-09-15-resurrecting-bothuddle-as-in-repo-skills","siblings":["architecture"]},"prefetchHints":4160,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}}}},"staleTime":300,"buildId":"HzCv0eFBKKKGNgIhNni59"}
+0:{"tree":{"name":"","param":null,"prefetchHints":4112,"slots":{"children":{"name":"slug","param":{"type":"d","key":"2026-09-15-resurrecting-bothuddle-as-in-repo-skills","siblings":["architecture"]},"prefetchHints":4160,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}}}},"staleTime":300,"buildId":"no4fCr2yQpshMsLK5zN6g"}
