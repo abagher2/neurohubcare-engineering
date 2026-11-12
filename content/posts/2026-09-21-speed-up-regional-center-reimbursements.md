@@ -32,8 +32,9 @@ No software can magically rewrite a Regional Center's internal accounting system
 
 What good software *can* do is eliminate the preventable kickbacks on the family's side before a packet ever leaves your hands:
 
-- **Pre-Submission Receipt Checks:** Extract and verify vendor details, service dates, itemized hours, and proof of payment the moment you upload a receipt.
+- **Start with One Receipt (Even Before Adding an IPP):** Upload a receipt right away, review extracted vendor, date, and amount fields with clear **`0%–100%` extraction confidence badges**, and make quick corrections before linking it to your IPP.
 - **Direct IPP Goal & Service Matching:** Link each receipt directly to the child's authorized IPP goal and service agreement so your Service Coordinator doesn't have to guess which authorization applies.
+- **Multi-Month & Cross-Year Service Period Grouping:** Automatically group receipts spanning a single month (`Oct 2026`), multiple months (`Oct–Nov 2026`), or across calendar years (`Dec 2026–Jan 2027`) with subtotals reconciled to the cent, and label PDF attachments clearly as *"Receipt / payment evidence"* vs. *"Invoice evidence"*.
 - **Clean Status Tracking (`Drafts`, `In Progress`, `Completed`):** Know immediately which receipts are still missing documentation, which reimbursement packets have been sent to your coordinator, and which have been resolved.
 
 ---

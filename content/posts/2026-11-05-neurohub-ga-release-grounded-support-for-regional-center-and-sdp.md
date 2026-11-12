@@ -55,23 +55,30 @@ flowchart LR
   DIR -->|Connects Trusted Providers| CARE
 ```
 
-### The Vault: Organized Records & Goal History
+### The Vault: Start with One IPP or Receipt
+- **No Need to Wait for a Complete Binder:** You can start with just **one IPP or one receipt**—and you can even upload out-of-pocket receipts before adding your IPP.
 - **One Secure Home for Core Records:** Store and organize Individual Program Plans (IPPs), IPP Addenda, Person-Centered Plans (PCPs), clinical assessments, and provider documents in one place.
 - **Clear Goal Connections:** Connect IPP goals directly to authorized services and keep a clean history as plans are updated from year to year.
 
-### Requests: Taming the 60–90 Day Paperwork Cycle
+### Requests: Taming the 60–90 Day Paperwork Cycle for Both Traditional & SDP
+- **Built for Both Pathways:**
+  - **For Traditional Regional Center Services:** Connect paid out-of-pocket receipts to your child's authorized services and IPP goals, then prepare a clean reimbursement packet for your Service Coordinator.
+  - **For Self-Determination (SDP):** Upload provider invoices and prepare formatted copies ready for Financial Management Service (FMS) review.
+- **Clear Extraction Confidence Badges (`0%–100%`):** When you upload a receipt or invoice, NeuroHub displays clear percentage confidence badges (`90%+` high confidence, `70%–89%` review recommended, `<70%` needs attention) so you know immediately which extracted fields to double-check.
+- **Multi-Month & Cross-Year Service Period Grouping:** Whether a packet spans a single month (`Oct 2026`), multiple months (`Oct–Nov 2026`), or crosses calendar years (`Dec 2026–Jan 2027`), NeuroHub groups line items cleanly by service period and reconciles every sub-period subtotal to the cent.
+- **Explicit PDF Attachment Footers:** Generated PDF packet attachments automatically label paid items as *"Receipt / payment evidence"* and unpaid vendor bills as *"Invoice evidence"* within safe printable margins—preventing Regional Center and FMS reviewers from kicking back packets over ambiguous payment status.
+- **Deterministic Bank Statement Matching:** Preview rule-based bank transaction matching for recurring providers to attach supporting payment evidence without ever auto-submitting a packet behind your back.
 - **Track Every Packet from Draft to Completion:** Keep receipts, reimbursement packets, SDP provider invoices, and plan change requests organized with simple status filters (**Drafts**, **In Progress**, **Completed**).
-- **Catch Missing Details Early & Match Bank Statements:** Upload a receipt or invoice, verify itemized dates and provider details, link it to the matching IPP goal, preview bank statement matching rules for recurring providers, and assemble a clean packet ready for your Service Coordinator or FMS.
 
 ### Collaborative Care Plan, SDP Budget & Care Team
 - **Shared Family + Facilitator Planning:** Parents and their invited Independent Facilitators work from the same live Spending Plan—moving smoothly through draft, review, and parent approval without emailing conflicting spreadsheets back and forth.
 - **Built-In FMS & Employer Cost Calculator:** Compare gross vs. net service budgets across [Bill Payer, Co-Employer, and Sole Employer FMS models](/2026-11-04-ultimate-guide-fms-models).
-- **Add & Invite the Providers You Already Trust:** Families can add any therapist, agency, tutor, or respite caregiver they already work with—kept **private to your family by default**—and send them an invitation to claim a free NeuroHub profile.
+- **Add & Invite the Providers You Already Trust:** Families can add any therapist, agency, tutor, or respite caregiver they already work with—kept **private to your family by default**—and send them an invitation to claim a free NeuroHub directory profile.
 
-### Free Workspace for Service Providers & Independent Facilitators
-- **Set Up at Your Own Pace & Claim Your Listing:** Solo Independent Facilitators, independent practitioners, and multi-clinician agencies can sign in for free, save and resume setup anytime, and claim their listing in the **NeuroHub Directory** without changing how they currently bill.
-- **You Control What Families See:** Update your contact details, Regional Center service areas, specialties, and rates, preview your listing, and choose whether to keep your profile private to existing client families or publish it to our searchable directory so new families can discover you. (Workspace setup, profile management, and directory visibility are live today, with optional provider invoicing and payment tracking arriving next.)
-- **Team Roles & Easy Switching:** Multi-person practices can invite billing or clinical staff with appropriate permissions, and parents who also serve as Independent Facilitators or providers can switch effortlessly between their family and professional accounts.
+### Free Workspace for Independent Facilitators & Free Directory Profiles for Service Providers
+- **100% Free for Independent Facilitators:** Solo and group Independent Facilitators can claim their listing in the **NeuroHub Directory** and collaborate with authorized client families on IPP goals, Person-Centered Plans, and SDP Spending Plans at no cost.
+- **Free Public Directory Profile Management for Service Providers:** Vendored and SDP service providers can claim and manage their public directory profile for free—updating contact details, Regional Center catchment areas, specialties, and rates, or clicking **Suggest an Edit** directly on their public listing without even creating a login.
+- **Community Resources Included:** Families can also browse local Family Resource Centers (FRCs), Special Education CACs, and parent support groups across California in the same directory.
 
 ### Ninja Assistant: Helpful Preparation, Never Forced Chat
 - Upload documents and fill out forms directly whenever you prefer—or ask **Ninja** to help prepare a draft from a complex document and review every detail and open question clearly before saving.
@@ -89,16 +96,19 @@ Great software for Regional Center and SDP care has to earn trust every single d
 
 ---
 
-## 4. Simple Pricing & How to Get Started
+## 4. Simple Pricing, Our "Founding 100" Beta Goal & How to Get Started
 
 We designed NeuroHub's pricing so every family, facilitator, and provider can coordinate without friction:
 
-- **Independent Facilitators, Service Providers & Coordinators:** **$0/month (100% Free).** Claim your profile, manage your visibility in our directory, and collaborate with the families you support at no cost.
-- **Parent & Family Plan:** **$9.99/month.** Organize your IPPs and care documents, prepare clean reimbursement packets and SDP budgets, and coordinate your entire care team in one place.
+- **Parent & Family Plan:** **$9.99/month.** Organize your IPPs and care documents, prepare clean Traditional reimbursement packets and SDP invoice/budget workflows, and coordinate your entire care team in one place.
+- **Independent Facilitators:** **$0/month (100% Free).** Claim your directory listing and collaborate with the client families who authorize you on IPPs, Person-Centered Plans, and SDP Spending Plans at no cost.
+- **Service Providers & Community Resources:** **Free Public Directory Profile.** Claim and manage your public directory listing (or suggest edits anytime) for free so Regional Center and SDP families can find accurate information about your services.
 
-### Try NeuroHub Today
-Whether you are a parent organizing IPP paperwork and reimbursements, an Independent Facilitator building Person-Centered Plans and SDP Spending Plans, or a provider supporting Regional Center families, you can get started on desktop or laptop today:
+### Help Us Welcome Our First 100 Founding California Families
+As we open our **Early Beta**, our goal this month is to welcome our **first 100 Founding California Families**—and walk through their setup 1-on-1—so we can prove strong community demand from families as we prepare to expand NeuroHub across California in the new year:
 
-- **Get Started on NeuroHub:** [https://neurohubcare.com/home/get-started](https://neurohubcare.com/home/get-started)
+1. **Try One Real Task on Desktop or Laptop:** [https://neurohubcare.com/home/get-started](https://neurohubcare.com/home/get-started) — start with a single receipt or IPP, and tell us where you get stuck using the **in-app feedback form** or by emailing **support@redtape.ninja**.
+2. **Book a Free 15-Minute 1-on-1 Beta Setup Walkthrough:** Bring a real IPP or receipt folder and let us help you set up your workspace live: [https://calendar.app.google/qfjLEMvYcs7mpudq9](https://calendar.app.google/qfjLEMvYcs7mpudq9)
+3. **Refer Another Regional Center or SDP Parent:** Almost every family we meet discovers helpful resources through another parent. If you know 1 or 2 other parents, Independent Facilitators, or providers who are overwhelmed by Regional Center or SDP paperwork, sharing this article or [https://neurohubcare.com/home/get-started](https://neurohubcare.com/home/get-started) with them truly makes the difference!
 
 Thank you to every parent, self-advocate, Independent Facilitator, provider, and support group leader who shared their time and lived experience with us. The road through Regional Center and SDP paperwork is still bumpy—but you no longer have to navigate it with a shoebox of receipts and a dozen disconnected spreadsheets.

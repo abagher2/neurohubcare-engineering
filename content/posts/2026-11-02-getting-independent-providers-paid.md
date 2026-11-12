@@ -26,7 +26,7 @@ To get paid smoothly through an FMS on an invoice basis (Bill Payer / 1099 vendo
 2. **Service Code & Rate Agreement:** The family (often with their Independent Facilitator) maps the provider's services to the appropriate SDP service code and agreed rate inside the certified Spending Plan.
 3. **Standardized, Itemized Invoices:** Each invoice must list the participant, dates of service, hours or units delivered, agreed rate, and service description matching the Spending Plan authorization.
 
-By giving independent providers a clear checklist and a single place to submit compliant invoices or receipts—and clearly badging whether each client is on **SAR (Reimburse)** or **SDP (Invoice)**—families can bring the best community specialists onto their Care Team without administrative guesswork.
+By giving independent providers a clear checklist and helping families format clean packets—with automatic multi-month and cross-year service period grouping, cent-reconciled subtotals, and explicit PDF footers distinguishing **"Invoice evidence"** (for unpaid SDP vendor invoices sent to an FMS) from **"Receipt / payment evidence"** (for paid Traditional Regional Center reimbursements)—families can bring the best community specialists onto their Care Team without administrative guesswork.
 
 ---
 
