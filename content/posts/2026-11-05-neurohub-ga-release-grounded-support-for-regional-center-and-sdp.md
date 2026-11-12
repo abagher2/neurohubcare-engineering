@@ -107,7 +107,7 @@ We designed NeuroHub's pricing so every family, facilitator, and provider can co
 ### Help Us Welcome Our First 100 Founding California Families
 As we open our **Early Beta**, our goal this month is to welcome our **first 100 Founding California Families**—and walk through their setup 1-on-1—so we can prove strong community demand from families as we prepare to expand NeuroHub across California in the new year:
 
-1. **Try One Real Task on Desktop or Laptop:** [https://neurohubcare.com/home/get-started](https://neurohubcare.com/home/get-started) — start with a single receipt or IPP, and tell us where you get stuck using the **in-app feedback form** or by emailing **support@redtape.ninja**.
+1. **Try One Real Task on Desktop or Laptop:** [https://neurohubcare.com/home/get-started](https://neurohubcare.com/home/get-started) — start with a single receipt or IPP, and tell us where you get stuck using the **in-app feedback form** or by emailing **[founder@neurohubcare.com](mailto:founder@neurohubcare.com)**.
 2. **Book a Free 15-Minute 1-on-1 Beta Setup Walkthrough:** Bring a real IPP or receipt folder and let us help you set up your workspace live: [https://calendar.app.google/qfjLEMvYcs7mpudq9](https://calendar.app.google/qfjLEMvYcs7mpudq9)
 3. **Refer Another Regional Center or SDP Parent:** Almost every family we meet discovers helpful resources through another parent. If you know 1 or 2 other parents, Independent Facilitators, or providers who are overwhelmed by Regional Center or SDP paperwork, sharing this article or [https://neurohubcare.com/home/get-started](https://neurohubcare.com/home/get-started) with them truly makes the difference!
 
