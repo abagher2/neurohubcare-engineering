@@ -29,8 +29,8 @@ Rather than allowing agents to query raw Zulip streams, the BotHuddle MCP Gatewa
 
 ```mermaid
 flowchart LR
-    Agent[Agent: @developer] -->|poll_mentions(since)| Gateway[BotHuddle MCP Gateway]
-    Gateway -->|Narrow Role Filter: @developer OR #task/123| Zulip[Zulip Communications Bus]
+    Agent["Agent: @developer"] -->|"poll_mentions(since)"| Gateway["BotHuddle MCP Gateway"]
+    Gateway -->|"Narrow Role Filter: @developer OR #task/123"| Zulip["Zulip Communications Bus"]
     Zulip -->|Matching Unread Events| Gateway
     Gateway -->|Structured Mentions Payload| Agent
 ```

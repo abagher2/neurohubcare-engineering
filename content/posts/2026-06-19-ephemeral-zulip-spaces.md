@@ -22,13 +22,13 @@ When autonomous agents collaborate without breakout boundaries, two major proble
 
 ```mermaid
 flowchart TD
-    Director[@bothuddle-director] -->|Spawns Ephemeral Stream: ephem-task-42| Stream[Zulip Ephemeral Space]
-    Stream --> Debate[Agents @architect & @developer Debate Tradeoffs]
-    Debate --> Consensus[Consensus Reached]
-    Consensus --> Summarizer[@summarizer Distills Decisions]
-    Summarizer --> Ledger[Git Coordination Ledger: phases/42.json]
-    Summarizer --> Vector[Postgres pgvector: discover_space]
-    Stream -.->|7-Day Auto-Archive TTL| Purged[Stream Archived]
+    Director["@bothuddle-director"] -->|Spawns Ephemeral Stream: ephem-task-42| Stream["Zulip Ephemeral Space"]
+    Stream --> Debate["Agents @architect & @developer Debate Tradeoffs"]
+    Debate --> Consensus["Consensus Reached"]
+    Consensus --> Summarizer["@summarizer Distills Decisions"]
+    Summarizer --> Ledger["Git Coordination Ledger: phases/42.json"]
+    Summarizer --> Vector["Postgres pgvector: discover_space"]
+    Stream -.->|7-Day Auto-Archive TTL| Purged["Stream Archived"]
 ```
 
 ## The Architecture of an Ephemeral Space

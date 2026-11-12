@@ -10,6 +10,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ShareButtons } from '../../components/ShareButtons';
 import { BlogSidebar, MonthFacet, TagFacet } from '../../components/BlogSidebar';
+import { MermaidDiagram } from '../../components/MermaidDiagram';
 import { Layers, ArrowLeft, ArrowRight, Calendar } from 'lucide-react';
 import './markdown.css';
 
@@ -210,23 +211,43 @@ export default async function PostPage(props: PageProps) {
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
-                code({node, inline, className, children, ...props}: any) {
-                  const match = /language-(\w+)/.exec(className || '')
-                  return !inline && match ? (
-                    <SyntaxHighlighter
-                      style={vscDarkPlus as any}
-                      language={match[1]}
-                      PreTag="div"
-                      {...props}
-                    >
-                      {String(children).replace(/\n$/, '')}
-                    </SyntaxHighlighter>
-                  ) : (
+                pre({ children }) {
+                  return <>{children}</>;
+                },
+                code({ node, className, children, ...props }: any) {
+                  const rawCode = String(children).replace(/\n$/, '');
+                  const match = /language-(\w+)/.exec(className || '');
+                  const isBlock = Boolean(match) || String(children).includes('\n');
+
+                  if (match && match[1] === 'mermaid') {
+                    return <MermaidDiagram chart={rawCode} />;
+                  }
+
+                  if (isBlock) {
+                    return (
+                      <SyntaxHighlighter
+                        style={vscDarkPlus as any}
+                        language={match ? match[1] : 'text'}
+                        PreTag="div"
+                        customStyle={{
+                          borderRadius: '8px',
+                          padding: '1.25rem',
+                          marginBottom: '1.5rem',
+                          fontSize: '0.9rem',
+                        }}
+                        {...props}
+                      >
+                        {rawCode}
+                      </SyntaxHighlighter>
+                    );
+                  }
+
+                  return (
                     <code className={className} {...props}>
                       {children}
                     </code>
-                  )
-                }
+                  );
+                },
               }}
             >
               {post.content}

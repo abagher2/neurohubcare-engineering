@@ -72,11 +72,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable}`}>
+    <html lang="en" className={`${inter.variable}`} style={{ colorScheme: 'light' }}>
       <head>
         <link rel="alternate" type="application/rss+xml" title="NeuroHub Engineering RSS Feed" href="/rss.xml" />
       </head>
-      <body style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', margin: 0, background: 'var(--background, #f1f5f9)', fontFamily: 'var(--font-inter, sans-serif)' }}>
+      <body style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', margin: 0, background: 'var(--background, #f1f5f9)', color: 'var(--text-main, #0f172a)', fontFamily: 'var(--font-inter, sans-serif)' }}>
         <SiteHeader />
         <main style={{ flex: '1 0 auto', padding: '2rem' }}>
           {children}

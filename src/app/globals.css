@@ -1,6 +1,8 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
+  color-scheme: light;
   /* Premium Slate & Indigo Palette */
   --primary: #6366f1;
   --primary-bg: rgba(99, 102, 241, 0.1);
@@ -54,40 +56,6 @@
   --radius-md: 0.75rem;
   
   --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f172a;
-    --bg-main: #0f172a;
-    --surface: rgba(30, 41, 59, 0.75);
-    --surface-sunken: #020617;
-    --surface-active: #1e293b;
-    --surface-border: #334155;
-    --surface-hover: #1e293b;
-    --border-hover: #475569;
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
-    
-    --glass-bg: rgba(15, 23, 42, 0.85);
-    --glass-border: rgba(255, 255, 255, 0.1);
-  }
-}
-
-.dark, [data-theme="dark"] {
-  --background: #0f172a;
-  --bg-main: #0f172a;
-  --surface: rgba(30, 41, 59, 0.75);
-  --surface-sunken: #020617;
-  --surface-active: #1e293b;
-  --surface-border: #334155;
-  --surface-hover: #1e293b;
-  --border-hover: #475569;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  
-  --glass-bg: rgba(15, 23, 42, 0.85);
-  --glass-border: rgba(255, 255, 255, 0.1);
 }
 
 .glass-panel {
@@ -162,12 +130,6 @@ dialog::backdrop {
   background: rgba(15, 23, 42, 0.4);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-}
-
-@media (prefers-color-scheme: dark) {
-  dialog::backdrop {
-    background: rgba(15, 23, 42, 0.7);
-  }
 }
 
 
@@ -703,12 +665,6 @@ body.assistant-sidebar-open [role="dialog"] {
 .skeleton-block {
   background: var(--surface-sunken, var(--slate-200));
   border-radius: 6px;
-}
-
-@media (prefers-color-scheme: dark) {
-  .skeleton-block {
-    background: var(--surface-sunken, var(--slate-800));
-  }
 }
 
 /* Responsive Footer styling for viewports < 400px */

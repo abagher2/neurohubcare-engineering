@@ -1,101 +1,104 @@
 ---
-title: "Announcing the NeuroHub GA Release: Grounded Support, Organization, and Clarity for Regional Center & SDP Families"
+title: "Introducing NeuroHub: Grounded Support, Organization, and Clarity for Regional Center & SDP Families"
 date: "2026-11-05"
 slug: "2026-11-05-neurohub-ga-release-grounded-support-for-regional-center-and-sdp"
 summary: "Why we built NeuroHub around a simple truth from our Customer Advisory Board interviews: there is no magic bullet for a broken bureaucracy, but the right information, organization, and support can make a bumpy road dramatically smoother."
-tags: ["Product Launch", "GA Release", "Regional Center", "SDP", "Independent Facilitator", "Architecture"]
+tags: ["Product Launch", "Regional Center", "SDP", "Independent Facilitator", "Care Team"]
 ---
 
-# Announcing the NeuroHub GA Release: Grounded Support, Organization, and Clarity for Regional Center & SDP Families
+# Introducing NeuroHub: Grounded Support, Organization, and Clarity for Regional Center & SDP Families
 
-> **Our Core Promise at GA:** Anyone with lived experience in California's Regional Center system or the Self-Determination Program (SDP) knows there is no "magic bullet" or panacea that makes state bureaucracy disappear overnight. When we interviewed Support Group Executive Directors, Independent Facilitators, and parents earlier this year, their message was unmistakable: *do not promise families guaranteed instant approvals or claim that AI can replace human judgment. Give us the information, organization, and preparation tools to navigate a bumpy road more smoothly.* Today, with our General Availability (GA) release, that is exactly what NeuroHub delivers.
+> **Our Core Promise:** Anyone with lived experience in California's Regional Center system or the Self-Determination Program (SDP) knows there is no "magic bullet" or panacea that makes state bureaucracy disappear overnight. When we interviewed Support Group Executive Directors, Independent Facilitators, service providers, and parents earlier this year, their message was unmistakable: *do not promise families guaranteed instant approvals or claim that software can replace human judgment. Give us the information, organization, and preparation tools to navigate a bumpy road more smoothly.* Today, as NeuroHub opens to families and care teams across California, that is exactly what we deliver.
 
-Over the past six months, we have chronicled our engineering journey on this blog—from [building a deterministic TypeScript Compliance Engine](/2026-09-02-building-the-compliance-engine) and [enforcing our 7-Group Architecture](/2026-09-17-the-7-group-agentic-architecture) to [banning unvalidated JSON with strict ORM Builders](/2026-09-18-strict-orm-builders).
+Over the past several months, we worked side by side with **Parents**, **Self-Advocates**, **Independent Facilitators (IFs)**, **Service Providers**, and **Service Coordinators** to build a calm, trustworthy home for day-to-day Regional Center and SDP care administration.
 
-Every one of those architectural decisions served a single human goal: building a trustworthy, desktop-class workspace for **Parents**, **Independent Facilitators (IFs)**, **Providers**, and **Service Coordinators** navigating Regional Center services.
-
-Today, we are excited to open our **Customer Advisory Board Beta & General Availability (GA) Release**—and to share how direct feedback from the community shaped every workflow in the platform.
+Today, **NeuroHub is officially live**—and we want to share how direct feedback from the community shaped every part of the product.
 
 ---
 
-## 1. What Our Pre-Launch Interviews Taught Us
+## 1. What Families, Facilitators & Providers Taught Us
 
-Before writing a line of our Milestone 2 and GA workflows, we sat down with Support Group Executive Directors, veteran Independent Facilitators, and families across both the **Traditional (SAR)** and **Self-Determination Program (SDP)** tracks. Three insights fundamentally shaped the product we are launching today:
+Before designing NeuroHub's workflows, we sat down with Support Group Executive Directors, veteran Independent Facilitators, service providers, and families across both the **Traditional Regional Center** and **Self-Determination Program (SDP)** pathways. Three insights shaped everything you see in NeuroHub today:
 
 ### Insight 1: "No Panaceas—Respect Lived Experience"
 When we spoke with the Executive Director of a regional family support group, she gave us a candid warning:
-> *"The Regional Center system is broken. Anyone with lived experience knows there is no magic solution. If you pitch software as a panacea that solves everything automatically, seasoned advocates and parents will immediately tune out. AI can list FMS firms and organize documents, but it cannot guarantee which FMS or provider is actually competent. Position NeuroHub as providing information, organization, and support to navigate a bumpy road more smoothly."*
+> *"The Regional Center system is broken. Anyone with lived experience knows there is no magic solution. If you pitch software as a panacea that solves everything automatically, seasoned advocates and parents will immediately tune out. Technology can list FMS firms and organize documents, but it cannot guarantee which FMS or provider is actually competent. Position NeuroHub as providing information, organization, and support to navigate a bumpy road more smoothly."*
 
-That conversation became a permanent engineering and product invariant at NeuroHub. Our UI and AI assistant (**Ninja**) never claim that clicking a button guarantees an external Regional Center or FMS approval, and our **Directory** (`/directory`) clearly distinguishes searchable factual listings from human-vetted clinical experience.
+That conversation became a permanent promise at NeuroHub. Our workspace and our assistant (**Ninja**) never claim that clicking a button guarantees an external Regional Center or FMS approval, and our **Provider & FMS Directory** clearly distinguishes factual listings from personal family experience.
 
-### Insight 2: The 60–90 Day Traditional Reimbursement Bottleneck & Holistic PCPs
-In our interviews with Independent Facilitators, we initially hypothesized that IFs needed software to invoice for their own facilitation services. They quickly corrected us:
-- **IF Self-Invoicing Isn't the Bottleneck:** IFs invoicing for their own hours is already straightforward. The real, hair-on-fire pain point for families is the **[60-to-90-day reimbursement cycle in the Traditional Regional Center model](/2026-09-21-speed-up-regional-center-reimbursements)**—where a single missing Tax ID, unitemized receipt, or vague service description gets a packet kicked back after two months of waiting.
-- **A PCP Is Not a Mechanical Copy of an IPP:** Writing a **Person-Centered Plan (PCP)** requires deeply understanding the child's and family's holistic goals, strengths, and daily context so the IF can advocate for the right services—never just running a mechanical form conversion on an old IPP.
+### Insight 2: The 60–90 Day Reimbursement Bottleneck & Holistic Planning
+In our early interviews with Independent Facilitators, we initially assumed IFs needed software primarily to bill for their own facilitation hours. They quickly set us straight:
+- **Family Reimbursements Are the Real Bottleneck:** Billing for facilitation hours is already straightforward. The real, exhausting pain point for families is the **[60-to-90-day reimbursement cycle](/2026-09-21-speed-up-regional-center-reimbursements)**—where a single missing Tax ID, unitemized receipt, or vague service description gets a packet kicked back after two months of waiting.
+- **A Person-Centered Plan Is Not a Mechanical Copy of an IPP:** Writing a **Person-Centered Plan (PCP)** requires deeply understanding the individual's holistic goals, strengths, and daily life so the team can advocate for the right supports—never just copying boxes from an old IPP.
 
-### Insight 3: 1099 Business Setup, FMS Burden Math & Collaborative Spending Plans
-Our deep-dive interviews on SDP vendorization and spending plans revealed where IFs and parents lose dozens of hours during SDP transitions:
-- Mapping a certified budget (e.g., `$50,000`) across specific Regional Center service codes while accounting for **monthly FMS fees** and **employer payroll tax / workers' compensation burden** (`rcMath`).
-- Explaining to independent providers (and parents hiring personal assistants) that under a Bill Payer FMS track, **[the FMS pays businesses on an invoice basis](/2026-10-27-hiring-direct-respite-workers)**—requiring an EIN/W-9, business invoicing, and clear **SAR (Reimburse)** vs. **SDP (Invoice)** alignment.
-- Getting explicit **parent review and approval** on Spending Plan drafts and budget change requests before submitting updates to the Regional Center and FMS.
+### Insight 3: Direct Provider Setup, FMS Burden Math & Shared Spending Plans
+Our conversations around SDP transitions and spending plans highlighted where families and facilitators lose dozens of hours:
+- Mapping a certified budget across Regional Center service categories while accounting for **monthly FMS fees** and **employer payroll tax and workers' compensation costs**.
+- Helping independent providers and personal assistants understand how **[FMS invoice payment works](/2026-10-27-hiring-direct-respite-workers)**—keeping Traditional reimbursements and SDP vendor invoices clearly organized.
+- Giving parents and Independent Facilitators a single place to review and approve Spending Plan drafts and budget updates before sending paperwork to the Regional Center and FMS.
 
 ---
 
-## 2. What Is Included in the NeuroHub GA Platform
+## 2. What You Can Do in NeuroHub Today
 
-We organized the NeuroHub GA experience around clear, addressable workspaces that separate passive record storage from active workflow execution:
+NeuroHub brings your records, reimbursements, budgets, and care team into clear, focused workspaces:
 
 ```mermaid
 flowchart LR
-  VAULT["The Vault (/vault)\nIPPs, Holistic PCPs, Assessments & W-9s"]
-  CARE["Care Plan (/care-plan)\nSDP Budget, Burden Math & Authorized Services"]
-  REQUESTS["Action Center (/requests)\nReceipts, Reimbursements, Invoices & Workflows"]
-  DIR["Directory (/directory)\nFMS Models & Regional Provider Discovery"]
+  VAULT["The Vault<br/>IPPs, Holistic PCPs, Assessments & W-9s"]
+  CARE["Care Plan & Budget<br/>SDP Spending Plans, Burden Math & Care Team"]
+  REQUESTS["Requests<br/>Receipts, Reimbursements, Invoices & Changes"]
+  DIR["Directory<br/>FMS Options & Provider Discovery"]
 
-  VAULT -->|Links Goals & Lineage| CARE
-  CARE -->|Authorizes Service Codes & Caps| REQUESTS
-  DIR -->|Onboards SAR or SDP Providers| CARE
+  VAULT -->|Connects Goals to Services| CARE
+  CARE -->|Tracks Budgets & Authorizations| REQUESTS
+  DIR -->|Connects Trusted Providers| CARE
 ```
 
-### The Vault (`/vault`): Holistic Records & IPP/PCP Lineage
-- **Passive Record Store:** Store and organize Individual Program Plans (IPPs), IPP Addenda, holistic Person-Centered Plans (PCPs), clinical assessments, and vendor documentation in one place.
-- **Goal-Driven Lineage:** Extracted IPP goals link directly to authorized services and retain full version and parent-document lineage during revisions.
+### The Vault: Organized Records & Goal History
+- **One Secure Home for Core Records:** Store and organize Individual Program Plans (IPPs), IPP Addenda, Person-Centered Plans (PCPs), clinical assessments, and provider documents in one place.
+- **Clear Goal Connections:** Connect IPP goals directly to authorized services and keep a clean history as plans are updated from year to year.
 
-### The Action Center (`/requests`): Taming the 60–90 Day Reimbursement Cycle
-- **Active Execution Workspace:** Every Receipt, Reimbursement packet, SDP Invoice, and IPP/Budget Change Workflow lives at a dedicated, full-page URL with clean status pill filters (**Drafts**, **In Progress**, **Completed**).
-- **Pre-Submission Audit Readiness:** Upload a receipt or forward an invoice, verify itemized dates/hours and vendor details, link it to the matching IPP goal, and review the complete packet before sending it to your Service Coordinator or FMS.
+### Requests: Taming the 60–90 Day Paperwork Cycle
+- **Track Every Packet from Draft to Completion:** Keep receipts, reimbursement packets, SDP provider invoices, and plan change requests organized with simple status filters (**Drafts**, **In Progress**, **Completed**).
+- **Catch Missing Details Early & Match Bank Statements:** Upload a receipt or invoice, verify itemized dates and provider details, link it to the matching IPP goal, preview bank statement matching rules for recurring providers, and assemble a clean packet ready for your Service Coordinator or FMS.
 
-### Collaborative Care Plan & SDP Budget Builder (`/care-plan/budget` & `/care-plan/services`)
-- **Shared Family + IF Workspace:** Parents and their invited Independent Facilitators collaborate on the same live Spending Plan records—moving cleanly through draft, review, parent approval, and revision states without emailing conflicting spreadsheets back and forth.
-- **Built-In FMS & Burden Calculator:** Automatically calculate gross vs. net service allocations across [Bill Payer, Co-Employer, and Sole Employer FMS models](/2026-11-04-ultimate-guide-fms-models).
+### Collaborative Care Plan, SDP Budget & Care Team
+- **Shared Family + Facilitator Planning:** Parents and their invited Independent Facilitators work from the same live Spending Plan—moving smoothly through draft, review, and parent approval without emailing conflicting spreadsheets back and forth.
+- **Built-In FMS & Employer Cost Calculator:** Compare gross vs. net service budgets across [Bill Payer, Co-Employer, and Sole Employer FMS models](/2026-11-04-ultimate-guide-fms-models).
+- **Add & Invite the Providers You Already Trust:** Families can add any therapist, agency, tutor, or respite caregiver they already work with—kept **private to your family by default**—and send them an invitation to claim a free NeuroHub profile.
 
-### Ninja Assistant (`/ninja`): Prepared Drafts, Never Forced Conversations
-- Use standard upload and form workflows whenever you want direct data entry—or hand complex, multi-page documents to **Ninja** to prepare a draft and open the canonical Review step with populated facts, remaining gaps, and required user acknowledgements clearly highlighted.
+### Free Workspace for Service Providers & Independent Facilitators
+- **Set Up at Your Own Pace & Claim Your Listing:** Solo Independent Facilitators, independent practitioners, and multi-clinician agencies can sign in for free, save and resume setup anytime, and claim their listing in the **NeuroHub Directory** without changing how they currently bill.
+- **You Control What Families See:** Update your contact details, Regional Center service areas, specialties, and rates, preview your listing, and choose whether to keep your profile private to existing client families or publish it to our searchable directory so new families can discover you. (Workspace setup, profile management, and directory visibility are live today, with optional provider invoicing and payment tracking arriving next.)
+- **Team Roles & Easy Switching:** Multi-person practices can invite billing or clinical staff with appropriate permissions, and parents who also serve as Independent Facilitators or providers can switch effortlessly between their family and professional accounts.
 
----
-
-## 3. Continuous Validation: Simulating Our Interviewed Personas with Local LLMs
-
-To ensure we never drift from the real-world skepticism of our users, we baked our June 2026 customer interviews directly into our automated E2E verification suite (`e2e/cab-interview-persona-feedback.spec.ts`).
-
-Before a release ships, our local vision-language judge (`USE_LOCAL_LLM=true`) evaluates live application screens through the eyes of four interviewed personas:
-1. **`interview_executive_director`:** Audits public and directory pages to ensure zero "magic bullet" overpromises and clear, empathetic framing.
-2. **`interview_if_reimbursement_advocate`:** Verifies that the IF workspace and Action Center prioritize holistic PCP/IPP context and 60–90 day reimbursement relief.
-3. **`interview_if_vendorization_spending_plan`:** Inspects `/care-plan/budget` and `/care-plan/services` for service-code mapping, FMS tax/labor burden visibility, and 1099 invoice vs. SAR reimbursement clarity.
-4. **`interview_parent_traditional_sdp_bridge`:** Evaluates the clarity of the Vault vs. Action Center separation and status pill filtering for busy parents.
+### Ninja Assistant: Helpful Preparation, Never Forced Chat
+- Upload documents and fill out forms directly whenever you prefer—or ask **Ninja** to help prepare a draft from a complex document and review every detail and open question clearly before saving.
 
 ---
 
-## 4. Simple Pricing & How to Join Our Customer Advisory Board Rollout
+## 3. Keeping Real Community Voices at the Center
 
-We want every advocate and family to be able to work together without friction:
+Great software for Regional Center and SDP care has to earn trust every single day. Before we ship major updates, we review our screens and guidance against four real-world perspectives drawn directly from our community interviews:
 
-- **Independent Facilitators (IFs), Providers & Service Coordinators:** **100% Free.** Collaborate with your client families, prepare PCPs and Spending Plans, and track service authorizations at no cost.
-- **Parent Plan:** **$9.99/month** (with a **Founding Advisory Member** rate for early Customer Advisory Board families). If organizing your Vault, catching receipt formatting errors upfront, and keeping your SDP budget balanced saves you even one kicked-back reimbursement packet, NeuroHub pays for itself many times over.
+1. **Support Group Leaders:** Ensuring our tone stays empathetic, transparent, and completely free of "magic bullet" promises.
+2. **Reimbursement Advocates:** Keeping the focus on holistic IPP/PCP context and practical relief from 60–90 day reimbursement delays.
+3. **SDP Spending Plan Facilitators:** Making service-code mapping, FMS fees, and employer tax/workers' compensation math clear at a glance.
+4. **Busy Parents & Caregivers:** Keeping records in **The Vault** and active tasks in **Requests** simple, calm, and easy to pick back up between appointments.
 
-### Get Started with NeuroHub
-Whether you are a parent organizing IPP documents and reimbursements, an Independent Facilitator building Person-Centered Plans and SDP Spending Plans, or an independent provider coordinating with client families, you can get started directly on desktop today:
+---
+
+## 4. Simple Pricing & How to Get Started
+
+We designed NeuroHub's pricing so every family, facilitator, and provider can coordinate without friction:
+
+- **Independent Facilitators, Service Providers & Coordinators:** **$0/month (100% Free).** Claim your profile, manage your visibility in our directory, and collaborate with the families you support at no cost.
+- **Parent & Family Plan:** **$9.99/month.** Organize your IPPs and care documents, prepare clean reimbursement packets and SDP budgets, and coordinate your entire care team in one place.
+
+### Try NeuroHub Today
+Whether you are a parent organizing IPP paperwork and reimbursements, an Independent Facilitator building Person-Centered Plans and SDP Spending Plans, or a provider supporting Regional Center families, you can get started on desktop or laptop today:
 
 - **Get Started on NeuroHub:** [https://neurohubcare.com/home/get-started](https://neurohubcare.com/home/get-started)
 
-Thank you to every parent, Independent Facilitator, provider, and support group leader who shared their time and lived experience with us. The road through Regional Center and SDP paperwork is still bumpy—but you no longer have to navigate it with a shoebox of receipts and a dozen disconnected spreadsheets.
+Thank you to every parent, self-advocate, Independent Facilitator, provider, and support group leader who shared their time and lived experience with us. The road through Regional Center and SDP paperwork is still bumpy—but you no longer have to navigate it with a shoebox of receipts and a dozen disconnected spreadsheets.

@@ -65,13 +65,13 @@ We banned ad-hoc responsibility. Every line of code in the repository now belong
 
 ```mermaid
 flowchart TD
-  UI["@experience-group\n(Canonical Routes & RSC Controllers)"]
-  API["@application-api-group\n(Authorized Operations & Orchestration)"]
-  DATA["@data-model-group\n(Entities, Builders & Audited ORM)"]
-  POLICY["@policy-library-group\n(Pure TypeScript Compliance Rules)"]
-  AGENTS["@agents-inference-group\n(LLM Prompts & Structured Inference)"]
-  RESEARCH["@research-group\n(Source Discovery & Regulation Diffs)"]
-  RUNTIME["@runtime-tooling-group\n(Async Jobs, Timers & AST Linter Gates)"]
+  UI["@experience-group<br/>(Canonical Routes & RSC Controllers)"]
+  API["@application-api-group<br/>(Authorized Operations & Orchestration)"]
+  DATA["@data-model-group<br/>(Entities, Builders & Audited ORM)"]
+  POLICY["@policy-library-group<br/>(Pure TypeScript Compliance Rules)"]
+  AGENTS["@agents-inference-group<br/>(LLM Prompts & Structured Inference)"]
+  RESEARCH["@research-group<br/>(Source Discovery & Regulation Diffs)"]
+  RUNTIME["@runtime-tooling-group<br/>(Async Jobs, Timers & AST Linter Gates)"]
 
   UI -->|Dispatches Intent| API
   API -->|Evaluates Facts| POLICY

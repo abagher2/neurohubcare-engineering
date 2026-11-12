@@ -30,10 +30,10 @@ Instead of allowing agents to speak raw HTTP to Forgejo and Zulip, BotHuddle int
 
 ```mermaid
 flowchart LR
-    Agent[Autonomous Agent / MCP] -->|Strongly-Typed Domain Calls| Unified[Unified Domain API (FastAPI)]
-    Unified -->|REST / Git Hooks| Forgejo[Forgejo Git Ledger]
-    Unified -->|Zulip Client API| Zulip[Zulip Communications Bus]
-    Unified -->|SQLAlchemy| DB[(PostgreSQL / SQLite Metadata)]
+    Agent["Autonomous Agent / MCP"] -->|Strongly-Typed Domain Calls| Unified["Unified Domain API (FastAPI)"]
+    Unified -->|REST / Git Hooks| Forgejo["Forgejo Git Ledger"]
+    Unified -->|Zulip Client API| Zulip["Zulip Communications Bus"]
+    Unified -->|SQLAlchemy| DB[("PostgreSQL / SQLite Metadata")]
 ```
 
 Rather than thinking in raw database rows or external HTTP payloads, the Unified Domain API surfaces consolidated domain entities:

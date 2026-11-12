@@ -25,11 +25,11 @@ bh:@bothuddle.inf.architect:a8f9c2d1
 
 ```mermaid
 flowchart LR
-    Zulip[Zulip Handle: Stable Alias] --> GAID[Global Agent ID (GAID)]
-    Git[Git Spawn Commit: a8f9c2d1] --> GAID
-    GAID --> TCC[Task-Context-Constraint Engine]
-    TCC --> Tools[Scoped MCP Tool Registry]
-    TCC --> Branch[Git Branch Lock: LOCKED_AGENT]
+    Zulip["Zulip Handle: Stable Alias"] --> GAID["Global Agent ID (GAID)"]
+    Git["Git Spawn Commit: a8f9c2d1"] --> GAID
+    GAID --> TCC["Task-Context-Constraint Engine"]
+    TCC --> Tools["Scoped MCP Tool Registry"]
+    TCC --> Branch["Git Branch Lock: LOCKED_AGENT"]
 ```
 
 This structure binds two critical dimensions:
