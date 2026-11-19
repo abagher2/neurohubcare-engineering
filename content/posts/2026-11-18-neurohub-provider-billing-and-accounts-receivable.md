@@ -1,12 +1,12 @@
 ---
-title: "This Week on NeuroHub: Client Billing, Itemized PDF Invoices, and Faster Directory Search"
+title: "This Week on NeuroHub: Client Billing, Itemized PDF Invoices, and Directory Search Updates"
 date: "2026-11-18"
 slug: "2026-11-18-neurohub-provider-billing-and-accounts-receivable"
-summary: "A look at this week's product updates across NeuroHub: client billing accounts and itemized PDF invoices for providers and Independent Facilitators, faster typo-tolerant search across 7,100+ California directory listings, and streamlined account setup."
+summary: "A look at this week's product updates across NeuroHub: client billing accounts and itemized PDF invoices for providers and Independent Facilitators, improved search across 7,100+ California provider, facilitator, and family-resource listings, and streamlined account setup."
 tags: ["Product Update", "Providers", "Independent Facilitator", "SDP", "Regional Center", "Invoicing"]
 ---
 
-# This Week on NeuroHub: Client Billing, Itemized PDF Invoices, and Faster Directory Search
+# This Week on NeuroHub: Client Billing, Itemized PDF Invoices, and Directory Search Updates
 
 NeuroHub brings California Regional Center and Self-Determination Program (SDP) paperwork into one organized workspace—helping families manage Individual Program Plans (IPPs), prepare Traditional reimbursement packets and SDP budgets, and coordinate with their care team.
 
@@ -44,9 +44,9 @@ The workspace displays your **Recorded Invoice Total** (issued invoices minus an
 
 ---
 
-## 2. Faster, More Forgiving California Directory Search
+## 2. California Directory Search Updates
 
-Searching NeuroHub's index of **7,100+ independent California service providers, Independent Facilitators, Family Resource Centers, and Special Education CACs** at **[https://neurohubcare.com/directory](https://neurohubcare.com/directory)**—with additional providers and community resources added continuously—is now significantly faster and handles everyday phrasing and typos much more smoothly when looking up a local provider, specialty, or Regional Center resource.
+This week we improved search across our directory of **7,100+ California provider, facilitator, and family-resource listings** at **[https://neurohubcare.com/directory](https://neurohubcare.com/directory)**. You can search by name or describe the support you’re looking for, and we’re also looking for useful sources to expand the directory.
 
 ---
 
