@@ -46,7 +46,7 @@ The workspace displays your **Recorded Invoice Total** (issued invoices minus an
 
 ## 2. Faster, More Forgiving California Directory Search
 
-Searching our directory of **7,100+ California service providers, Independent Facilitators, Family Resource Centers, and Special Education CACs** at **[https://neurohubcare.com/directory](https://neurohubcare.com/directory)** is now significantly faster—and handles everyday phrasing and typos much more smoothly when looking up a local provider, specialty, or Regional Center resource.
+Searching NeuroHub's index of **7,100+ independent California service providers, Independent Facilitators, Family Resource Centers, and Special Education CACs** at **[https://neurohubcare.com/directory](https://neurohubcare.com/directory)**—with additional providers and community resources added continuously—is now significantly faster and handles everyday phrasing and typos much more smoothly when looking up a local provider, specialty, or Regional Center resource.
 
 ---
 
